@@ -7,8 +7,7 @@ the human overview of the same process.
 
 ## Transcribing lectures (S1 → S4, in batches of 3–5)
 
-Per lecture, four stages — the donor course ran all 26 lectures through this
-staging and it held up:
+Per lecture, four stages:
 
 1. **S1 — triage.** The assistant reads the source material end to end and
    produces a page map, the topic arc, and an ambiguity list. **You answer

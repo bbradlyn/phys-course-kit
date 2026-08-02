@@ -2,8 +2,13 @@
 
 Durable rules distilled from the changelog — forward-propagating: once a
 convention lands here, all future lectures follow it (earlier ones are
-retrofitted only by explicit decision). Seeded from the donor project
-(PHYS 567); grows as the course proceeds.
+retrofitted only by explicit decision). Seeded with proven rules; grows as the course proceeds.
+
+Record **terminology and presentation preferences here too, not just
+notation** — established house names for recurring objects, house table
+styles for systematic data. The reason: a faithful
+transcription agent reproduces the *source* wherever the house style isn't
+written down — fidelity forbids it from inventing style.
 
 ## Authoring (engine-neutral content subset)
 - Frames, blocks, columns, overlay specs, and course macros only — no
@@ -11,7 +16,7 @@ retrofitted only by explicit decision). Seeded from the donor project
 - Overlay specs are optional slide polish; the web target flattens them.
 - Sized delimiters split across alignment rows: use balanced-per-row
   `\left…\right.` / `\left.…\right]` fences — never split a `\Big`-family
-  pair across rows (this corrupted MathML in the donor project).
+  pair across rows (this corrupts the generated MathML).
 - Circled labels: use the kit's `\case{N}` (renders ① in slides, "(N)" on the
   web) — never raw `\textcircled` in content.
 - Display equations: break long equations at the source (chain-split at `=`,
@@ -30,22 +35,27 @@ retrofitted only by explicit decision). Seeded from the donor project
 - Write tensor products explicitly (`\otimes`) even where the source juxtaposes
   the factors, so the product can never be misread as a matrix product.
 
-## Notation (physics)
-- Pauli matrices carry **superscript** indices: `\sigma^0` (identity),
-  `\sigma^x,\sigma^y,\sigma^z`; `\tau^a` for the sublattice two-level space;
-  `\vec\sigma` for the Pauli vector. Sources written with subscripts are
-  converted silently.
-- Time reversal is $\mathcal{T}$ (macro `\TRS`); complex conjugation is
-  $\mathcal{K}$ (macro `\conj`).
-- Upright space-group and little-group symbols via `\sg{...}` (= `\mathrm`).
-  Lecture-local in `lecture25`; promote to `shared/macros.tex` as
-  `\providecommand` the first time a second lecture wants it.
-- A mirror's subscript names its plane **normal** — $M_{1\bar1}$ is the plane
-  with normal $\vec e_1-\vec e_2$. Keep the Hermann–Mauguin-style index: it is
-  what students use to find the group on the Bilbao server.
-- `\vec e_1,\vec e_2` for primitive vectors, `\vec R` for Bravais translations;
-  Dirac notation only via `\ket`/`\bra`/`\braket`. Say "irreps", not
-  "irreducible representations".
+## Example entries: notation (replace with your course's own decisions)
+
+Worked examples of the right granularity for this file — delete them as
+your course makes its own calls.
+
+- *Example:* Pauli matrices carry **superscript** indices: `\sigma^0`
+  (identity), `\sigma^x,\sigma^y,\sigma^z`; `\tau^a` for a second two-level
+  (sublattice) space; `\vec\sigma` for the Pauli vector. Sources written with
+  subscripts are converted silently.
+- *Example:* Time reversal is $\mathcal{T}$ (macro `\TRS`); complex
+  conjugation is $\mathcal{K}$ (macro `\conj`).
+- *Example:* Upright space-group symbols via an `\sg{...}` macro —
+  lecture-local at first, promoted to `shared/macros.tex` as
+  `\providecommand` the first time a second lecture wants it (the standard
+  promotion path for any macro).
+- *Example:* A mirror's subscript names its plane **normal**; keep
+  Hermann–Mauguin-style indices so students can find the group on the Bilbao
+  server.
+- *Example:* `\vec e_1,\vec e_2` for primitive vectors, `\vec R` for Bravais
+  translations; Dirac notation only via `\ket`/`\bra`/`\braket`; say
+  "irreps", never "irreducibles".
 
 ## Frame structure
 - `\announcementsframe` goes directly after the title frame.

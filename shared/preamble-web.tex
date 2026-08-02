@@ -2,11 +2,10 @@
 % Web preamble (article target for LaTeXML + BookML) — loaded by drivers/web.tex.
 %
 % CLASSIC TeX BY CONSTRUCTION: no xparse, no expl3, no engine-specific escape
-% hatches.  This is the collapse of the donor course's beamer->article shim
-% layer (PHYS 567 preamble_html.tex + phys-lxml-compat.tex) into one ordinary
-% preamble — LaTeXML 0.8.8 parses it directly, and it also compiles under
-% plain pdflatex (which BookML's build relies on: the PDF pass runs first and
-% doubles as a regression check).
+% hatches — a beamer->article shim layer as one ordinary preamble.  LaTeXML
+% 0.8.8 parses it directly, and it also compiles under plain pdflatex (which
+% BookML's build relies on: the PDF pass runs first and doubles as a
+% regression check).
 %
 % Builds run from the REPO ROOT: all paths are root-relative.
 % ===========================================================================
@@ -29,7 +28,7 @@
 % --- BookML (when present) ---------------------------------------------------
 % nomathjax: native MathML, zero JS (the site's stance).  style=plain: no
 % gitbook chrome.  tikzpicture environments render as dvisvgm SVG images —
-% the accessible figure path (donor pilot, streamlining.md §8.6).
+% the accessible figure path (labels stay glyphs, not live DOM text).
 % Guarded so the document still compiles under plain pdflatex without the
 % bookml/ directory (debug builds outside the BookML flow).
 \IfFileExists{bookml/bookml.sty}{%
@@ -59,7 +58,7 @@
 % --- title page: beamer's \titlepage inside the title frame -> \maketitle ----
 % AtBeginDocument, not a preamble-time \def: LaTeXML re-establishes its own
 % \titlepage constructor after the preamble runs, so a plain override here is
-% silently lost (donor pilot lesson, 2026-08-02).  Harmless under pdflatex.
+% silently lost.  Harmless under pdflatex.
 \AtBeginDocument{\def\titlepage{\maketitle}\def\endtitlepage{}}
 
 % --- frame -> subsection heading (final, fully-revealed state) ---------------
@@ -151,7 +150,7 @@
 
 % --- \case{N} and \textcircled safety ----------------------------------------
 % LaTeXML stringifies \textcircled's argument (decorated arguments come out as
-% literal TeX — donor lesson 2026-08-02), and a circled digit conveys nothing a
+% literal TeX), and a circled digit conveys nothing a
 % screen reader can't get from the bare number: parenthesized form on the web.
 \newcommand{\case}[1]{(#1)}
 \def\textcircled#1{(#1)}

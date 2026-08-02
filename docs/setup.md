@@ -54,6 +54,6 @@ runs). **No TeX pinning is needed**: the kit runs on a current stock TeX Live
   are unreliable on some machines); `PUPPETEER_EXECUTABLE_PATH` overrides.
 - **Windows**: `setup.sh` is POSIX. Manual equivalents: install TeX Live,
   LaTeXML (Strawberry Perl + cpanm), Ghostscript, Node; unzip the pinned
-  BookML release into `bookml/`. Donor-project gotcha worth knowing: npm's
+  BookML release into `bookml/`. Known gotcha: npm's
   global `.ps1` shims are blocked by PowerShell's default execution policy —
   `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` fixes pa11y.

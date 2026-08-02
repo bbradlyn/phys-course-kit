@@ -2,8 +2,7 @@
 
 You author exactly one file per lecture: `content/lectureNN.tex`, in a subset
 of LaTeX that both drivers accept. `content/lecture00.tex` is the living
-reference — copy its shape. Rules below carry their reasons; most were paid
-for in the donor course.
+reference — copy its shape. Rules below carry their reasons.
 
 ## Anatomy of a lecture file
 
@@ -61,10 +60,10 @@ show). If in doubt, use `\onslide`.
   if an accessibility audit ever flags a scrollable equation, the fix is
   breaking that equation, not suppressing the audit.
 - **Sized delimiters must balance within each alignment row.** Splitting a
-  `\Bigl[ ... \Bigr]` pair across rows produced corrupted MathML in the donor
-  project (twice — it's the classic trap). Use `\left[...\right.` on the
+  `\Bigl[ ... \Bigr]` pair across rows corrupts the generated MathML (the
+  classic trap). Use `\left[...\right.` on the
   first row and `\left....\right]` on the continuation.
-- A small share of formulas (donor rate ~0.5–6% per lecture) miss LaTeXML's
+- A small share of formulas (typically ~0.5–6% per lecture) miss LaTeXML's
   math grammar and render as flat-but-valid token MathML. Cosmetic; rewrite
   only if the rendering actually looks wrong.
 

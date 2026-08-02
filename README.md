@@ -1,72 +1,91 @@
 # phys-course-kit
 
-A template repository for turning handwritten physics lecture notes into an
-**accessible HTML course site** (HTML5 + native MathML + SVG figures with
-authored alt text), with an optional beamer slide deck per lecture — designed
-so that a new course can start producing validated, accessible pages from
-lecture 1, without re-learning anything the hard way.
+A template repository for publishing a physics lecture course as an
+**accessible website** — HTML5 with native MathML (no JavaScript renderers),
+figures as SVG images with author-written alt text, and a validation suite
+that gates every build — with an optional, matching **beamer slide deck** per
+lecture from the same source.
 
 **Who this is for:** a LaTeX-competent physicist working with a capable AI
-assistant (Claude Opus-class or better). Neither of you needs prior experience
-with this pipeline — the experience is written down here. The human guide lives
-in [`docs/`](docs/); the AI assistant's operating manual is
-[`CLAUDE.md`](CLAUDE.md), which any capable agent should read before touching
-course content.
+assistant. Neither of you needs prior experience with this pipeline: the
+human guide lives in [`docs/`](docs/), and [`CLAUDE.md`](CLAUDE.md) is the
+assistant's operating manual — including the transcription workflow for
+turning handwritten notes into course pages, and the questions it should
+stop and ask you along the way.
 
-## Architecture: one source, two drivers, no transform
+## How it works
+
+You author **one file per lecture** — `content/lectureNN.tex`, written in a
+frame-structured, engine-neutral LaTeX subset (the worked example is
+[`content/lecture00.tex`](content/lecture00.tex)). Two thin wrappers render
+it:
 
 ```
-content/lectureNN.tex        ← the ONLY authored lecture file (engine-neutral:
-      │                        frames, blocks, \fig{path}{alt-key}, course macros)
-      ├── drivers/web.tex    → LaTeXML + BookML → accessible HTML  (PRIMARY)
-      └── drivers/slides.tex → beamer → PDF deck                   (OPTIONAL)
+content/lectureNN.tex ──┬─▶ drivers/web.tex    → LaTeXML + BookML → accessible HTML
+                        └─▶ drivers/slides.tex → beamer           → PDF deck (optional)
 ```
 
-There is **no transform step**: both targets `\input` the same content file
-through thin driver wrappers. The slides target is built headlessly as a
-regression gate even if you never lecture from slides — it proves the content
-stays inside the dual-compatible subset. Ephemeral material (announcements,
-dates) lives in per-lecture sidecars under [`announcements/`](announcements/),
-never in lecture bodies. Every figure is born with alt text in
-[`alt/`](alt/) sidecars — a missing description is a build error, not a
-rendering quirk.
+Everything hand-written beyond the lecture itself lives in sidecar files:
+figure descriptions in `alt/` (a missing description is a build **error**,
+not a rendering quirk), and day-of-lecture announcements in
+`announcements/` (they appear on the slides, never in the published
+archive). Even if you never lecture from decks, the slide build runs as a
+check — it proves each lecture still renders on both targets, so nothing
+web-only or slides-only can creep into your source.
+
+## Quick start
+
+1. Press **Use this template** on GitHub and clone your new repository.
+2. Edit [`shared/course.tex`](shared/course.tex) — course code, title, term,
+   URL. That is the only renaming there is.
+3. `./setup.sh` — checks the toolchain (TeX Live, LaTeXML, Ghostscript,
+   pa11y), asks before installing anything, and fetches BookML at a pinned,
+   checksum-verified release.
+4. `./course.py build 00` — the sample lecture should PASS with every gate
+   green. `./course.py doctor` explains anything that doesn't.
+5. Read [`docs/workflow.md`](docs/workflow.md), point your AI assistant at
+   [`CLAUDE.md`](CLAUDE.md), and start transcribing lecture 1. (Delete the
+   `lecture00` sample files before your first real publish.)
+
+A standard TeX Live plus LaTeXML on PATH is all that's expected — no pinned
+TeX installs, no version juggling.
 
 ## Layout
 
 | Path | What it holds |
 |---|---|
 | `content/` | Canonical lecture sources — the only files you author |
-| `figures/` | TikZ figure sources, shared namespace from the start |
-| `alt/` | Figure alt-text sidecars, written at transcription time |
-| `announcements/` | Per-lecture day-of-editable sidecars (slides-only) |
-| `drivers/` | The two thin build wrappers (web primary, slides optional) |
-| `shared/` | Course macros, the two preambles, site CSS |
-| `notes/` | Per-lecture stage notes (`lectureNN.md`) — the transcription work record that makes batches resumable |
+| `figures/` | TikZ figure sources, one directory per owning lecture |
+| `alt/` | Figure alt-text sidecars, written when the figure is made |
+| `announcements/` | Per-lecture, day-of-editable, slides-only |
+| `drivers/` | The two build wrappers (web primary, slides optional) |
+| `shared/` | Course identity, macros, the two preambles, the palette |
+| `notes/` | Per-lecture transcription work records (make batches resumable) |
 | `docs/` | The human guide: setup, authoring, workflow, troubleshooting |
 | `CLAUDE.md` | The AI assistant's operating manual |
-| `CHANGELOG.md` | Append-only project ledger (rules inside — keep the discipline) |
-| `conventions.md` | Durable conventions distilled as the course proceeds |
+| `CHANGELOG.md` | Append-only course ledger (rules inside — keep the discipline) |
+| `conventions.md` | Your course's durable decisions, as they get made |
 
-## Status
+## What the gates check
 
-**Under construction (started 2026-08-02).** This kit is being extracted from
-PHYS 567 "Geometry and Topology in Modern Electronic Structure Theory"
-(26 lectures, fully validated accessible-HTML archive) and from its
-LaTeXML/BookML engine pilot. The acceptance test for the kit is a complete
-worked example: PHYS 567's lecture 25 re-authored in kit format, building both
-targets clean through the full validation gate suite and matching its
-known-good reference output. Design record: the donor repo's
-`streamlining.md` §8–§9.
+Every `./course.py build NN` runs the full suite on the result: the
+conversion log is scanned for errors, every figure must carry its alt text,
+the MathML is checked for a known malformation signature, and each page gets
+an automated accessibility audit (axe, via pa11y). A lecture that passes is
+publishable; `./course.py build --all` produces the whole site plus its
+index under `build/web/html/`, ready for any static host.
 
-Present and smoke-tested: the shared layer (both preambles, macros, course
-identity), both drivers, the `\fig`→`<img alt>` alt-text wiring, `course.py`
-(build / slides / check / index / doctor / clean, with the validation gates
-wired into every build), `setup.sh` (checked installs + the pinned BookML
-fetch), the four guide chapters in [`docs/`](docs/), the completed agent
-manual, and the `lecture00` worked example building clean through both
-targets on a stock TeX Live + LaTeXML toolchain — no pinning required.
+## Provenance
 
-Not yet present: the site styling pass (slide cards, badges — deliberately
-lands against real content) and the acceptance test (the donor course's
-lecture 25 re-authored in kit format, checked against its known-good
-reference output).
+The kit is the distilled pipeline of a real 26-lecture graduate course
+(PHYS 567, *Geometry and Topology in Modern Electronic Structure Theory* —
+handwritten notes to validated accessible HTML), rebuilt in the simplified
+form that experience suggested. It was acceptance-tested end to end: a
+fresh AI agent, given only this repository's manual and thirteen pages of
+handwritten notes, re-authored one of that course's lectures through the
+full workflow — interviews, figures, alt text, gates — and the result
+matched the course's validated version on every content check. (One
+difference favored the kit: its computed band-structure figure exposed a
+drawing error in the original.) The web output currently ships with
+BookML's plain styling, which passes every audit; card styling in the
+course palette is optional polish. Development history: `CHANGELOG.md`.

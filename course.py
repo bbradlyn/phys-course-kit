@@ -237,7 +237,7 @@ MATHML_TOKENS = {"mi", "mo", "mn", "mtext", "ms", "mspace",
 
 class _MathScan(HTMLParser):
     """Character data directly inside a non-token MathML element — the
-    malformed-MathML signature (donor course tripwire, kept as insurance)."""
+    malformed-MathML signature (a standing tripwire)."""
 
     def __init__(self):
         super().__init__(convert_charrefs=True)

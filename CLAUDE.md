@@ -10,8 +10,7 @@ ask.
 > This manual is operational. Companion references: `docs/authoring.md` (the
 > content subset and its reasons), `docs/troubleshooting.md` (what each gate
 > means when it fires), `docs/workflow.md` (the human-side view of this same
-> process). The donor project behind all of it ran 26 lectures through this
-> staging.
+> process).
 
 ## The contract
 
@@ -39,15 +38,19 @@ ask.
    undecidable. Do not flood the operator with hedges.
 6. **Ledger discipline.** Every session that changes course content or
    process appends to `CHANGELOG.md` (append-only — never edit or reorder
-   past rows). Durable lessons get distilled into `conventions.md`. If you
-   made a decision worth remembering, it goes in the ledger, not just the
-   conversation.
+   past rows). Durable lessons get distilled into `conventions.md` —
+   including **terminology and presentation preferences** (house names for
+   recurring objects, house table styles), not just notation: under the
+   fidelity contract you reproduce the source wherever the house style isn't
+   recorded, so an unrecorded preference is a preference that won't happen.
+   If you made a decision worth remembering, it goes in the ledger, not just
+   the conversation.
 7. **Stage notes.** Keep `notes/lectureNN.md` current as you work: the page
    map, interview answers received, deviations from the source, and next
    actions — updated before you end any turn. It is what makes a batch
    resumable by a fresh session (or a different agent), and it is committed
-   course history, not scratch. (This rule exists because a session loss
-   during the kit's acceptance run was survivable *only* through this file.)
+   course history, not scratch. (A lost session is
+   survivable *only* through this file.)
 
 ## The pipeline you build into
 
