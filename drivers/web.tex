@@ -1,0 +1,20 @@
+% ===========================================================================
+% Web driver (PRIMARY target) — builds one lecture as accessible HTML via
+% LaTeXML + BookML.  Invoked through a root-level generated wrapper
+% (lectureNN.tex: \def\kitlecture{NN} \input{drivers/web.tex}) so BookML's
+% make sees one document per lecture; course.py generates the wrappers.
+% Also compiles under plain pdflatex (BookML's PDF-first pass relies on it).
+% Builds run from the REPO ROOT (all paths root-relative).
+% ===========================================================================
+\documentclass[11pt]{article}
+\input{shared/course.tex}
+\input{shared/preamble-web.tex}
+\input{shared/macros.tex}
+% Own alt-text sidecar (shared-figure borrowing: \usealtfrom in the content).
+\IfFileExists{alt/lecture\kitlecture.tex}{\input{alt/lecture\kitlecture.tex}}{}
+\begin{document}
+\ifdefined\kitlecture\else
+  \errmessage{kit: \noexpand\kitlecture is undefined - build through course.py,
+    which generates the lectureNN.tex wrappers}\fi
+\input{content/lecture\kitlecture.tex}
+\end{document}

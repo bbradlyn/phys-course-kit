@@ -1,0 +1,62 @@
+% ===========================================================================
+% Sample lecture — the kit's content subset demonstrated in one short file.
+% This is the worked skeleton: copy its shape for lecture01.tex and delete it
+% once the course is underway.  Authoring rules: conventions.md and CLAUDE.md.
+% ===========================================================================
+\kitlecturetitle{The Kit Content Subset, By Example}
+
+\begin{frame}
+  \titlepage
+  \begin{center}\small\courseurl\end{center}
+\end{frame}
+
+\announcementsframe
+
+\section{Structures}
+
+\begin{frame}{Blocks, Lists, And Emphasis}
+  \begin{block}{A named block}
+    Body text with \alert{alerted emphasis} and inline math $E=\hbar\omega$.
+  \end{block}
+  \begin{itemize}
+    \item<1-> First point, visible from the start.
+    \item<2-> Second point, revealed later — the web shows the final state.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Columns And Case Labels}
+  \begin{columns}
+    \begin{column}{0.55\textwidth}
+      Case \case{1}: the gap stays positive.
+      Case \case{2}: the gap changes sign.
+    \end{column}
+    \begin{column}{0.45\textwidth}
+      Columns stack top-to-bottom on the web, in reading order.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\section{Math And Figures}
+
+\begin{frame}{A Derivation, Step By Step}
+  Derivations are transcribed as written — every step shown:
+  \begin{align*}
+    \braket{u_{\vec k}}{u_{\vec k}} &= 1 \\
+    \partial_{k}\,\braket{u_{\vec k}}{u_{\vec k}} &= 0 .
+  \end{align*}
+\end{frame}
+
+\begin{frame}{A Figure Born With Alt Text}
+  \fig{figures/lecture00/square-lattice}{lecture00/square-lattice}
+  \onslide<2->{The description lives in \texttt{alt/lecture00.tex}, keyed by
+  owning lecture and figure name.}
+\end{frame}
+
+\section{Takeaways}
+
+\begin{frame}{Takeaways}
+  \begin{enumerate}
+    \item One content file, two targets, no transform.
+    \item Alt text and announcements live in sidecars, not lecture bodies.
+  \end{enumerate}
+\end{frame}

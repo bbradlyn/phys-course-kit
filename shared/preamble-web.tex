@@ -1,0 +1,198 @@
+% ===========================================================================
+% Web preamble (article target for LaTeXML + BookML) — loaded by drivers/web.tex.
+%
+% CLASSIC TeX BY CONSTRUCTION: no xparse, no expl3, no engine-specific escape
+% hatches.  This is the collapse of the donor course's beamer->article shim
+% layer (PHYS 567 preamble_html.tex + phys-lxml-compat.tex) into one ordinary
+% preamble — LaTeXML 0.8.8 parses it directly, and it also compiles under
+% plain pdflatex (which BookML's build relies on: the PDF pass runs first and
+% doubles as a regression check).
+%
+% Builds run from the REPO ROOT: all paths are root-relative.
+% ===========================================================================
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{amsthm}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,calc,positioning,shapes.geometric}
+% overlay-beamer-styles is beamer-only; make its keys harmless no-ops here.
+\tikzset{visible on/.style={}}
+
+% --- Kit palette (keep in sync with preamble-slides.tex and style.css) -------
+\definecolor{physblue}{HTML}{13294B}
+\definecolor{physorange}{HTML}{C84113}
+\definecolor{physgray}{HTML}{F3F4F6}
+\definecolor{physink}{HTML}{111827}
+\definecolor{physgreen}{HTML}{1B7A3D}
+
+% --- BookML (when present) ---------------------------------------------------
+% nomathjax: native MathML, zero JS (the site's stance).  style=plain: no
+% gitbook chrome.  tikzpicture environments render as dvisvgm SVG images —
+% the accessible figure path (donor pilot, streamlining.md §8.6).
+% Guarded so the document still compiles under plain pdflatex without the
+% bookml/ directory (debug builds outside the BookML flow).
+\IfFileExists{bookml/bookml.sty}{%
+  \usepackage[nomathjax,style=plain]{bookml/bookml}%
+  \bmlImageEnvironment{tikzpicture}%
+}{}
+
+% --- Lecture title metadata --------------------------------------------------
+\newcommand{\kitlecturetitle}[1]{%
+  \title{#1}\author{\coursecode}\date{\courseterm}}
+
+% ===========================================================================
+% Beamer -> article shims (all classic TeX)
+% ===========================================================================
+\makeatletter
+
+% --- helpers: strip one optional <...>; keep/gobble a following {group} ------
+\def\kit@ang#1{\@ifnextchar<{\kit@ang@{#1}}{#1}}
+\def\kit@ang@#1<#2>{#1}
+\long\def\kitunwrapgroup#1{#1}
+\long\def\kitgobblegroup#1{}
+\def\kit@maybegroup{\@ifnextchar\bgroup{\kitunwrapgroup}{}}
+
+% --- title page: beamer's \titlepage inside the title frame -> \maketitle ----
+% AtBeginDocument, not a preamble-time \def: LaTeXML re-establishes its own
+% \titlepage constructor after the preamble runs, so a plain override here is
+% silently lost (donor pilot lesson, 2026-08-02).  Harmless under pdflatex.
+\AtBeginDocument{\def\titlepage{\maketitle}\def\endtitlepage{}}
+
+% --- frame -> subsection heading (final, fully-revealed state) ---------------
+% \section stays article \section (=> h2); each frame title becomes a
+% \subsection (=> h3, and a real <section> element under LaTeXML).  A
+% title-less frame (the title page) emits no heading.
+\def\frame{\frame@scan}
+\newcommand\frame@scan[1][]{\@ifnextchar\bgroup{\frame@titled}{}}
+\newcommand\frame@titled[1]{\subsection{#1}}
+\def\endframe{}
+\def\frametitle{\kit@ang\kit@frametitle}
+\def\kit@frametitle#1{\subsection{#1}}
+\def\framesubtitle{\kit@ang\kit@framesubtitle}
+\def\kit@framesubtitle#1{\par\noindent\textbf{#1}\par}
+% Frames are unnumbered in the archival document; \sections keep 1..N.
+\setcounter{secnumdepth}{1}
+
+% --- overlays: drop the <...> spec, keep the final-state content -------------
+\def\onslide{\kit@ang\kit@maybegroup}
+\let\uncover\onslide
+\let\visible\onslide
+\def\pause{\kit@ang\relax}
+% \alt<ov>{shown}{hidden} -> shown (also what TikZ's \draw<1-> etc. expand to)
+\def\alt{\kit@ang\kit@alttake}
+\long\def\kit@alttake#1#2{#1}
+% \only: a CLOSED range (<1>, <1-2>) is staging the final state does NOT show —
+% drop the group; open ranges (<2->) and rangeless \only keep it.
+% Ends-with-dash test via the delimited-match idiom.
+\def\only{\@ifnextchar<{\kit@onlyspec}{\kit@maybegroup}}
+\def\kit@onlyspec<#1>{\kit@endsdash#1\kit@mk-\kit@mk\kit@stop}
+\long\def\kit@endsdash#1-\kit@mk#2\kit@stop{%
+  \if\relax\detokenize{#2}\relax
+    \expandafter\kit@dropgroup
+  \else
+    \expandafter\kit@maybegroup
+  \fi}
+\def\kit@dropgroup{\@ifnextchar\bgroup{\kitgobblegroup}{}}
+
+% --- \item<ov> ---------------------------------------------------------------
+\let\kit@origitem\item
+\def\item{\@ifnextchar<{\kit@itemang}{\kit@origitem}}
+\def\kit@itemang<#1>{\kit@origitem}
+
+% --- lists may carry <overlay> and/or [template] after \begin{...} -----------
+\let\kit@origitemize\itemize         \let\kit@endorigitemize\enditemize
+\let\kit@origenumerate\enumerate     \let\kit@endorigenumerate\endenumerate
+\let\kit@origdescription\description \let\kit@endorigdescription\enddescription
+\def\kit@liststrip#1{\@ifnextchar<{\kit@liststrip@ang{#1}}{\kit@liststrip@opt{#1}}}
+\def\kit@liststrip@ang#1<#2>{\kit@liststrip@opt{#1}}
+\def\kit@liststrip@opt#1{\@ifnextchar[{\kit@liststrip@opt@{#1}}{#1}}
+\def\kit@liststrip@opt@#1[#2]{#1}
+\renewenvironment{itemize}{\kit@liststrip\kit@origitemize}{\kit@endorigitemize}
+\renewenvironment{enumerate}{\kit@liststrip\kit@origenumerate}{\kit@endorigenumerate}
+\renewenvironment{description}{\kit@liststrip\kit@origdescription}{\kit@endorigdescription}
+
+% --- proof: strip a leading <overlay>, keep amsthm's optional [name] ---------
+\let\kit@origproof\proof  \let\kit@endorigproof\endproof
+\def\kit@proofstrip{\@ifnextchar<{\kit@proofang}{\kit@proofopt}}
+\def\kit@proofang<#1>{\kit@proofopt}
+\def\kit@proofopt{\@ifnextchar[{\kit@proofname}{\kit@origproof}}
+\def\kit@proofname[#1]{\kit@origproof[#1]}
+\renewenvironment{proof}{\kit@proofstrip}{\kit@endorigproof}
+
+% --- \alert -> bold + physorange ---------------------------------------------
+\def\alert{\kit@ang\kit@alertdo}
+\long\def\kit@alertdo#1{\textbf{\textcolor{physorange}{#1}}}
+
+% --- columns / column -> linear top-to-bottom stacking (= reading order) -----
+\newenvironment{columns}{\kit@colsbegin}{\par}
+\def\kit@colsbegin{\@ifnextchar[{\kit@colsopt}{\par}}
+\def\kit@colsopt[#1]{\par}
+\newenvironment{column}{\kit@colbegin}{\par}
+\def\kit@colbegin{\@ifnextchar[{\kit@colopt}{\kit@colwidth}}
+\def\kit@colopt[#1]{\kit@colwidth}
+\def\kit@colwidth#1{\par}
+
+% --- block / alertblock / exampleblock ---------------------------------------
+% Rendered as bold-title paragraphs for now; a LaTeXML binding giving semantic
+% <div class="block"> containers (for card styling) is a planned enhancement.
+% Overlay specs are stripped on BOTH sides of the title.
+\def\kit@blockbegin{\@ifnextchar<{\kit@blockpre}{\kit@blocktit}}
+\def\kit@blockpre<#1>{\kit@blocktit}
+\def\kit@blocktit#1{\par\medskip\noindent{\bfseries #1}\par\nobreak
+  \@ifnextchar<{\kit@blockpost}{}}
+\def\kit@blockpost<#1>{}
+\newenvironment{block}{\kit@blockbegin}{\par\medskip}
+\newenvironment{alertblock}{\kit@blockbegin}{\par\medskip}
+\newenvironment{exampleblock}{\kit@blockbegin}{\par\medskip}
+
+% --- \case{N} and \textcircled safety ----------------------------------------
+% LaTeXML stringifies \textcircled's argument (decorated arguments come out as
+% literal TeX — donor lesson 2026-08-02), and a circled digit conveys nothing a
+% screen reader can't get from the bare number: parenthesized form on the web.
+\newcommand{\case}[1]{(#1)}
+\def\textcircled#1{(#1)}
+
+% --- figure alt-text registry ------------------------------------------------
+% Authored alt text lives in alt/lectureNN.tex sidecars (keyed
+% "lectureNN/figure-name" by OWNING lecture; never regenerated).  \figalt must
+% stay expandable (plain \newcommand) so it can be materialized into the
+% output attribute.
+\newcommand{\setfigalt}[2]{\expandafter\def\csname kitalt@#1\endcsname{#2}}
+\newcommand{\figalt}[1]{%
+  \ifcsname kitalt@#1\endcsname\csname kitalt@#1\endcsname\else[ALT MISSING: #1]\fi}
+
+% --- shared-figure alt borrowing ---------------------------------------------
+% A lecture reusing another lecture's figure declares \usealtfrom{lectureMM};
+% the owner's sidecar is loaded so its keys resolve here.
+\newcommand{\usealtfrom}[1]{\IfFileExists{alt/#1.tex}{\input{alt/#1.tex}}{}}
+
+% --- \fig{path}{alt-key} -----------------------------------------------------
+% The TikZ source is \input (BookML images it via dvisvgm); \kitfigdesc is the
+% hook that attaches \figalt{#2} to the generated <img alt> — a no-op until the
+% LaTeXML binding lands (kit work item A3), harmless under pdflatex.
+\newcommand{\kitfigdesc}[1]{}
+\newcommand{\fig}[2]{%
+  \par\begin{center}\kitfigdesc{\figalt{#2}}\input{#1}\end{center}\par}
+
+% --- announcements: dropped by construction ----------------------------------
+% The archive is announcement-free; course.py's --keep-announcements defines
+% \kitkeepannouncements to flip them on for a one-off build.
+\ifdefined\kitkeepannouncements
+  \newcommand{\kitannouncementspath}{announcements/lecture\kitlecture.tex}
+  \newcommand{\announcementsframe}{%
+    \IfFileExists{\kitannouncementspath}%
+      {\begin{frame}{Announcements}\input{\kitannouncementspath}\end{frame}}{}}
+  \newcommand{\announcementsblock}{%
+    \IfFileExists{\kitannouncementspath}%
+      {\begin{block}{Announcements}\input{\kitannouncementspath}\end{block}}{}}
+\else
+  \newcommand{\announcementsframe}{}
+  \newcommand{\announcementsblock}{}
+\fi
+
+\makeatother

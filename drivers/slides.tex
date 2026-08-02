@@ -1,0 +1,18 @@
+% ===========================================================================
+% Slides driver (OPTIONAL target + regression gate) — builds one lecture as a
+% beamer PDF.  \kitlecture (two-digit lecture number) must be pre-defined;
+% course.py does this, or manually:
+%   latexmk -pdf -usepretex='\def\kitlecture{00}' -jobname=lecture00-slides \
+%           -output-directory=build/slides drivers/slides.tex
+% Builds run from the REPO ROOT (all paths root-relative).
+% ===========================================================================
+\documentclass[11pt]{beamer}
+\input{shared/course.tex}
+\input{shared/preamble-slides.tex}
+\input{shared/macros.tex}
+\begin{document}
+\ifdefined\kitlecture\else
+  \errmessage{kit: \noexpand\kitlecture is undefined - build through course.py
+    or pass -usepretex='\noexpand\def\noexpand\kitlecture{NN}'}\fi
+\input{content/lecture\kitlecture.tex}
+\end{document}

@@ -1,0 +1,10 @@
+% Sample TikZ figure (owned by lecture00). Figures draw with the kit palette;
+% their meaning is carried by the alt sidecar, not by embedded caption text.
+\begin{tikzpicture}[scale=0.9]
+  \foreach \x in {0,...,3} \foreach \y in {0,...,2}
+    \fill[physblue] (\x,\y) circle (2.5pt);
+  \draw[-{Stealth}, very thick, physorange] (1,1) -- (2,1)
+    node[midway, below] {$\vec e_1$};
+  \draw[-{Stealth}, very thick, physorange] (1,1) -- (1,2)
+    node[midway, left] {$\vec e_2$};
+\end{tikzpicture}

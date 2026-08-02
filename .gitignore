@@ -14,3 +14,9 @@ build/
 *.pdf
 !docs/**/*.pdf
 .DS_Store
+# BookML (fetched at a pinned release by the setup script; never committed)
+bookml/
+# Generated per-lecture web wrappers at the root (course.py recreates them)
+/lecture*.tex
+# BookML final packages land at the root — outputs, never committed
+/*.zip

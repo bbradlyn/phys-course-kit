@@ -1,0 +1,28 @@
+% ===========================================================================
+% Course math macros — target-neutral content semantics ONLY.
+% (Anything about *rendering* — figures, circled labels, announcements —
+% lives in the per-target preambles, not here.)
+%
+% Growth conventions (from the donor course):
+%   - Add macros here the FIRST time a second lecture needs them; a macro used
+%     by one lecture may start lecture-local in its content file.
+%   - Use \providecommand when promoting a macro that lectures already define
+%     locally, so existing content keeps compiling during the migration.
+%   - Record each promotion in CHANGELOG.md.
+% ===========================================================================
+
+% Number sets
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\ZZ}{\mathbb{Z}}
+
+% Upright differential
+\newcommand{\dd}{\mathrm{d}}
+
+% Dirac notation
+\providecommand{\ket}[1]{\left|#1\right\rangle}
+\providecommand{\bra}[1]{\left\langle#1\right|}
+\providecommand{\braket}[2]{\left\langle#1\,\middle|\,#2\right\rangle}
+
+% Set-builder and definitional equality
+\newcommand{\setof}[2]{\left\{\,#1\,\middle|\,#2\,\right\}}
+\newcommand{\defeq}{\coloneqq}
