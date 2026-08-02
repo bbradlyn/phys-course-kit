@@ -23,12 +23,8 @@
 % overlay-beamer-styles is beamer-only; make its keys harmless no-ops here.
 \tikzset{visible on/.style={}}
 
-% --- Kit palette (keep in sync with preamble-slides.tex and style.css) -------
-\definecolor{physblue}{HTML}{13294B}
-\definecolor{physorange}{HTML}{C84113}
-\definecolor{physgray}{HTML}{F3F4F6}
-\definecolor{physink}{HTML}{111827}
-\definecolor{physgreen}{HTML}{1B7A3D}
+% --- Kit palette (single source: shared/palette.tex) -------------------------
+\input{shared/palette.tex}
 
 % --- BookML (when present) ---------------------------------------------------
 % nomathjax: native MathML, zero JS (the site's stance).  style=plain: no
@@ -180,6 +176,9 @@
 % \figalt{#2} to it as the <img alt> (see shared/kitalt.sty[.ltxml]).
 \newcommand{\fig}[2]{%
   \par\begin{center}\input{#1}\kitfigdesc{\figalt{#2}}\end{center}\par}
+% \figw{width}{path}{key}: the width cap is a SLIDES-layout concern; on the
+% web the image flows at page width, so the width argument is ignored here.
+\newcommand{\figw}[3]{\fig{#2}{#3}}
 
 % --- announcements: dropped by construction ----------------------------------
 % The archive is announcement-free; course.py's --keep-announcements defines

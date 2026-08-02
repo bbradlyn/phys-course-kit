@@ -42,6 +42,12 @@ ask.
    past rows). Durable lessons get distilled into `conventions.md`. If you
    made a decision worth remembering, it goes in the ledger, not just the
    conversation.
+7. **Stage notes.** Keep `notes/lectureNN.md` current as you work: the page
+   map, interview answers received, deviations from the source, and next
+   actions — updated before you end any turn. It is what makes a batch
+   resumable by a fresh session (or a different agent), and it is committed
+   course history, not scratch. (This rule exists because a session loss
+   during the kit's acceptance run was survivable *only* through this file.)
 
 ## The pipeline you build into
 
@@ -81,7 +87,8 @@ flag.
 - **S3 — figures.** Reconstruct every figure as TikZ in
   `figures/lectureNN/`, faithful to the source's geometry, orientation, and
   labels — verify against the source drawing, not your mental model of the
-  physics. Render-check each figure standalone and in its frame. **Write the
+  physics. Render-check each figure standalone (`./course.py figure NN name`
+  — seconds, no full build) and then in its frame. **Write the
   alt description into `alt/lectureNN.tex` in the same session** — it is part
   of making the figure, not a later pass. Reuse existing figures where the
   source repeats one (`\usealtfrom`); interview the operator when a drawing

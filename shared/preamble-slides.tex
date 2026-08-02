@@ -13,12 +13,8 @@
 \usetikzlibrary{arrows.meta,calc,positioning,shapes.geometric}
 \usetikzlibrary{overlay-beamer-styles} % visible on=<...> for staged figure reveals
 
-% --- Kit palette (keep in sync with preamble-web.tex and style.css) ----------
-\definecolor{physblue}{HTML}{13294B}
-\definecolor{physorange}{HTML}{C84113}
-\definecolor{physgray}{HTML}{F3F4F6}
-\definecolor{physink}{HTML}{111827}
-\definecolor{physgreen}{HTML}{1B7A3D}
+% --- Kit palette (single source: shared/palette.tex) -------------------------
+\input{shared/palette.tex}
 
 \setbeamertemplate{navigation symbols}{}
 \setbeamertemplate{itemize item}{\raise0.2ex\hbox{\small$\blacktriangleright$}}
@@ -50,6 +46,11 @@
 % The slides target renders the figure; the alt key is consumed by the web
 % target (alt/lectureNN.tex sidecars). Same signature in both targets.
 \newcommand{\fig}[2]{\begin{center}\input{#1}\end{center}}
+% \figw{<width>}{path}{alt-key}: \fig capped to <width> — for figures whose
+% natural size overflows a frame.  adjustbox scales the FINISHED box, text
+% included (TikZ scale= scales only coordinates, making labels relatively
+% larger — the trap in docs/troubleshooting.md).
+\newcommand{\figw}[3]{\begin{center}\adjustbox{max width=#1}{\input{#2}}\end{center}}
 
 % --- shared-figure alt borrowing (web-semantic; no-op on slides) -------------
 % A lecture reusing another lecture's figure declares \usealtfrom{lectureMM}

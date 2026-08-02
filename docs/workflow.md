@@ -19,7 +19,8 @@ staging and it held up:
    `content/lectureNN.tex`, under the fidelity contract (your prose kept
    where it exists; derivations step for step). You review slide by slide;
    pass 2 applies your notes.
-3. **S3 — figures.** Every figure reconstructed as TikZ, render-checked,
+3. **S3 — figures.** Every figure reconstructed as TikZ, render-checked
+   (`./course.py figure NN name` renders one figure standalone in seconds),
    **with alt text written in the same session**. You review geometry and
    approve the descriptions.
 4. **S4 — accessibility & polish.** Progressive reveals where they help a
@@ -52,7 +53,10 @@ if you ever want a web copy with them).
 The site is the contents of `build/web/html/` — self-contained static files
 (one directory per lecture + `index.html`), ready to copy to any static
 host. The index is generated from the lecture titles in `content/` — there
-is no separate table of lectures to maintain.
+is no separate table of lectures to maintain. **Before the first real
+publish**: delete the sample lecture (`content/lecture00.tex`, its figure,
+alt, and announcements files), or it will appear in the index alongside your
+actual lectures.
 
 ## The regression stance
 

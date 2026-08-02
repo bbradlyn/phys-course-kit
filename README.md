@@ -41,6 +41,7 @@ rendering quirk.
 | `announcements/` | Per-lecture day-of-editable sidecars (slides-only) |
 | `drivers/` | The two thin build wrappers (web primary, slides optional) |
 | `shared/` | Course macros, the two preambles, site CSS |
+| `notes/` | Per-lecture stage notes (`lectureNN.md`) — the transcription work record that makes batches resumable |
 | `docs/` | The human guide: setup, authoring, workflow, troubleshooting |
 | `CLAUDE.md` | The AI assistant's operating manual |
 | `CHANGELOG.md` | Append-only project ledger (rules inside — keep the discipline) |

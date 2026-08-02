@@ -41,6 +41,7 @@ for in the donor course.
 | `\alert{...}` | orange emphasis | bold + orange |
 | `\case{N}` | circled glyph ① | `(N)` |
 | `\fig{path}{alt-key}` | centered figure | dvisvgm SVG `<img>` with the sidecar text as `alt` |
+| `\figw{width}{path}{alt-key}` | `\fig` capped to `width` (scales text too, unlike TikZ `scale=`) | same as `\fig` (images flow at page width) |
 | `\announcementsframe` / `\announcementsblock` | sidecar content | nothing (by construction) |
 
 Overlays are **optional slide polish** — write them if you lecture from the

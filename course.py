@@ -10,6 +10,9 @@ Verbs:
       that is their point).  Also the dual-target regression gate.
   check NN | --all [--no-pa11y | --strict]
       Check suite only, on existing web builds.
+  figure NN name
+      Render one TikZ figure standalone (build/figures/lectureNN-name.pdf,
+      plus .png on macOS) — the fast S3 render-check loop.
   index
       Generate the site index (build/web/html/index.html) from the lecture
       titles scraped out of content/ — no separate manifest to maintain.
@@ -176,6 +179,51 @@ def build_slides(nn):
         if p.exists():
             p.unlink()
     print(f"  slides OK -> build/slides/{job}.pdf")
+    return True
+
+
+# ---------------------------------------------------------------------------
+# single-figure render check (the S3 inner loop)
+# ---------------------------------------------------------------------------
+
+def render_figure(nn, name):
+    src = ROOT / "figures" / f"lecture{nn}" / f"{name}.tex"
+    if not src.exists():
+        sys.exit(f"no such figure: {src.relative_to(ROOT)}")
+    outdir = BUILD / "figures"
+    outdir.mkdir(parents=True, exist_ok=True)
+    job = f"lecture{nn}-{name}"
+    wrapper = outdir / f"{job}.wrapper.tex"
+    wrapper.write_text(
+        "\\documentclass[margin=2mm]{standalone}\n"
+        "\\usepackage{amsmath,amssymb,mathtools}\n"
+        "\\usepackage{xcolor}\n"
+        "\\usepackage{tikz}\n"
+        "\\usetikzlibrary{arrows.meta,calc,positioning,shapes.geometric}\n"
+        "\\tikzset{visible on/.style={}}\n"
+        "\\input{shared/palette.tex}\n"
+        "\\input{shared/macros.tex}\n"
+        f"\\begin{{document}}\\input{{figures/lecture{nn}/{name}.tex}}\\end{{document}}\n",
+        encoding="utf-8")
+    rc, out = run(["pdflatex", "-interaction=nonstopmode", "-halt-on-error",
+                   f"-output-directory={outdir.relative_to(ROOT)}",
+                   f"-jobname={job}", str(wrapper.relative_to(ROOT))], timeout=300)
+    if rc != 0:
+        print(out[-1200:])
+        print(f"FIGURE FAILED: {src.relative_to(ROOT)}")
+        return False
+    pdf = outdir / f"{job}.pdf"
+    print(f"  ok -> {pdf.relative_to(ROOT)}")
+    if sys.platform == "darwin":
+        png = outdir / f"{job}.png"
+        rc2, _ = run(["sips", "-s", "format", "png", str(pdf), "--out", str(png)],
+                     timeout=120)
+        if rc2 == 0:
+            print(f"  ok -> {png.relative_to(ROOT)}")
+    for ext in (".aux", ".log", ".wrapper.tex"):
+        p = outdir / (job + ext) if ext != ".wrapper.tex" else wrapper
+        if p.exists():
+            p.unlink()
     return True
 
 
@@ -437,8 +485,11 @@ def clean(deep=False):
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("verb", choices=["build", "slides", "check", "index", "doctor", "clean"])
+    ap.add_argument("verb", choices=["build", "slides", "check", "figure",
+                                     "index", "doctor", "clean"])
     ap.add_argument("lecture", nargs="?", help="NN / lectureNN (or --all)")
+    ap.add_argument("name", nargs="?",
+                    help="figure verb only: the figure basename (no .tex)")
     ap.add_argument("--all", action="store_true")
     ap.add_argument("--keep-announcements", action="store_true")
     ap.add_argument("--strict", action="store_true", help="missing pa11y is an error")
@@ -453,6 +504,10 @@ def main():
         return
     if args.verb == "index":
         sys.exit(0 if build_index(args.strict, args.no_pa11y) else 1)
+    if args.verb == "figure":
+        if not (args.lecture and args.name):
+            sys.exit("usage: course.py figure NN figure-name")
+        sys.exit(0 if render_figure(norm_lecture(args.lecture), args.name) else 1)
 
     targets = lectures() if args.all else [norm_lecture(args.lecture or "")] \
         if (args.lecture or args.all) else sys.exit("give a lecture (NN) or --all")

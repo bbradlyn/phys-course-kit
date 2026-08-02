@@ -18,6 +18,8 @@ actually hit; the fix patterns are proven.
 | announcements don't appear on the web | by design — announcements are slides-only ephemera | `./course.py build NN --keep-announcements` for a one-off web copy |
 | content missing from the web page that shows on slides | `\only<closed-range>` — closed ranges mean "not in the final state" and are dropped | if the content should persist, use `\onslide<n->` or an open range |
 | figures stale after editing TikZ | `bmlimages/` is a render cache keyed to the DVI | `./course.py clean --deep` (drops the cache), then rebuild |
+| white-backed figure labels render as solid coloured boxes | a bare colour name in a node's option list (`\node[lbl, physgreen]`) sets `color=`, which also sets the **fill** — silently overriding the `fill=white` that came from the node style | colour the text explicitly: `\node[lbl, text=physgreen]`. Same trap for any style that sets `fill` and is then combined with a bare colour name |
+| a figure shrunk to fit a frame has labels that look too large | TikZ `scale=` scales coordinates but **not** text nodes, so labels keep their absolute size as the drawing shrinks | shrinking is not a density fix — re-lay the frame instead (e.g. put two equation blocks in `columns`) and keep the figure legible |
 | slides green, web broken (or vice versa) | something target-specific crept into the single source | this is exactly what the dual-target regression gate catches; diff your constructs against `content/lecture00.tex` and the palette table |
 | hacking preambles: a `\titlepage`-style override silently ignored on the web | LaTeXML re-establishes some class commands after the preamble | override inside `\AtBeginDocument{...}` (see `shared/preamble-web.tex` for the worked instance) |
 
