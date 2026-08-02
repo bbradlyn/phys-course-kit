@@ -40,6 +40,9 @@
   \usepackage[nomathjax,style=plain]{bookml/bookml}%
   \bmlImageEnvironment{tikzpicture}%
 }{}
+% Alt-text bridge: \kitfigdesc attaches a figure description to the generated
+% image on the web target (LaTeXML binding); no-op under pdflatex.
+\usepackage{shared/kitalt}
 
 % --- Lecture title metadata --------------------------------------------------
 \newcommand{\kitlecturetitle}[1]{%
@@ -172,12 +175,11 @@
 \newcommand{\usealtfrom}[1]{\IfFileExists{alt/#1.tex}{\input{alt/#1.tex}}{}}
 
 % --- \fig{path}{alt-key} -----------------------------------------------------
-% The TikZ source is \input (BookML images it via dvisvgm); \kitfigdesc is the
-% hook that attaches \figalt{#2} to the generated <img alt> — a no-op until the
-% LaTeXML binding lands (kit work item A3), harmless under pdflatex.
-\newcommand{\kitfigdesc}[1]{}
+% The TikZ source is \input (BookML images it via dvisvgm); \kitfigdesc runs
+% AFTER the input so the generated image node exists, and attaches
+% \figalt{#2} to it as the <img alt> (see shared/kitalt.sty[.ltxml]).
 \newcommand{\fig}[2]{%
-  \par\begin{center}\kitfigdesc{\figalt{#2}}\input{#1}\end{center}\par}
+  \par\begin{center}\input{#1}\kitfigdesc{\figalt{#2}}\end{center}\par}
 
 % --- announcements: dropped by construction ----------------------------------
 % The archive is announcement-free; course.py's --keep-announcements defines

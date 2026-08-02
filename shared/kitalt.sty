@@ -1,0 +1,6 @@
+% Kit alt-text bridge — real-TeX side.
+% \kitfigdesc{text} is a no-op under pdflatex (alt text is a web-output
+% concern); the LaTeXML side lives in kitalt.sty.ltxml, which attaches the
+% text to the generated image as its description -> <img alt>.
+\ProvidesPackage{shared/kitalt}[2026/08/02 kit figure alt-text bridge]
+\newcommand{\kitfigdesc}[1]{}

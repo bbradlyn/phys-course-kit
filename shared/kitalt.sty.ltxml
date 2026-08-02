@@ -1,0 +1,26 @@
+# -*- mode: Perl -*-
+# Kit alt-text bridge — LaTeXML side.
+# \kitfigdesc{text} sets description on the most recent ltx:graphics node
+# (the image BookML just generated for the preceding tikzpicture); the HTML
+# serialization maps description -> <img alt>.  The argument arrives already
+# expanded (\figalt{key} -> the sidecar text, or "[ALT MISSING: key]", which
+# course.py's checks grep for).
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+DefConstructor('\kitfigdesc{}', sub {
+    my ($document, $text) = @_;
+    my $desc = ToString($text);
+    $desc =~ s/\s+/ /g;
+    $desc =~ s/^\s+|\s+$//g;
+    my ($graphics) = reverse $document->findnodes('//ltx:graphics');
+    if ($graphics) {
+      $document->setAttribute($graphics, description => $desc); }
+    else {
+      Warn('expected', 'graphics', $document,
+        'kitalt: no ltx:graphics found to attach the figure description to'); }
+    return; });
+
+1;

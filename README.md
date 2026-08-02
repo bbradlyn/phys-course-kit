@@ -57,6 +57,13 @@ targets clean through the full validation gate suite and matching its
 known-good reference output. Design record: the donor repo's
 `streamlining.md` §8–§9.
 
-Not yet present (arriving with extraction): `course.py` (the one-command
-driver), the preambles and macro layer, the setup script, the guide chapters'
-full content, and the worked example itself.
+Present and smoke-tested: the shared layer (both preambles, macros, course
+identity), both drivers, the `\fig`→`<img alt>` alt-text wiring, `course.py`
+(build / slides / check / index / doctor / clean, with the validation gates
+wired into every build), and the `lecture00` worked example building clean
+through both targets on a stock TeX Live + LaTeXML toolchain.
+
+Not yet present: the setup script (`docs/setup.md` is a stub; `course.py
+doctor` already audits the toolchain), the site styling pass (slide cards,
+badges — lands against real content), the guide chapters' full content, and
+the lecture-25 acceptance test.
