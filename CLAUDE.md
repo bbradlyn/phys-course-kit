@@ -7,9 +7,11 @@ prompting skill, is what makes the workflow reliable. Read it fully before
 touching course content. When this manual tells you to stop and ask, stop and
 ask.
 
-> **Status: DRAFT.** Sections marked ⟨extraction pending⟩ are being distilled
-> from the donor project (PHYS 567). The contract and protocol below are
-> settled and binding.
+> This manual is operational. Companion references: `docs/authoring.md` (the
+> content subset and its reasons), `docs/troubleshooting.md` (what each gate
+> means when it fires), `docs/workflow.md` (the human-side view of this same
+> process). The donor project behind all of it ran 26 lectures through this
+> staging.
 
 ## The contract
 
@@ -48,29 +50,48 @@ content/lectureNN.tex → drivers/web.tex    → LaTeXML+BookML → HTML (primar
                       → drivers/slides.tex → beamer → PDF        (optional)
 ```
 
-Both targets are built by `course.py` ⟨extraction pending⟩, which also runs
-the validation gates on every build. The slides build doubles as a regression
-gate: it must stay green even if the course never uses decks.
+Both targets are built by `./course.py`, which runs the validation gates on
+every web build (`build NN`); `slides NN` is the beamer target and doubles as
+the dual-target regression gate — it must stay green even if the course never
+uses decks. `doctor` audits the toolchain; `docs/troubleshooting.md` maps
+every gate failure to its meaning and fix.
 
-## The transcription workflow (S1 → S4, per lecture or small batch)
+## The transcription workflow (S1 → S4, in batches of 3–5 lectures)
 
-⟨extraction pending: full stage instructions from the donor project; the
-skeleton and interview points below are settled⟩
+Work in batches of three to five lectures; each stage completes for the whole
+batch before the next begins, and the operator reviews at every stage
+boundary. Never mark a stage done with a failing compile or an unanswered
+flag.
 
-- **S1 — triage.** Read the handwritten/source material end to end. Produce a
-  page map, topic arc, and a list of ambiguities. **Interview the operator**
-  before drafting: unreadable passages, notation conflicts with earlier
-  lectures, suspected errors in the source, scope boundaries ("is this
-  aside part of the lecture?").
-- **S2 — draft (two passes).** Pass 1: full transcription into
-  `content/lectureNN.tex` applying the S1 answers and the fidelity contract.
-  Pass 2: apply the operator's slide-by-slide/section-by-section review notes.
-- **S3 — figures.** Reconstruct every figure as TikZ in `figures/`, faithful
-  to the source's geometry and labels; render-check each one; write alt text
-  into `alt/` as you go. **Interview the operator** on figure intent when the
-  drawing is ambiguous about what it means (not about how it looks).
-- **S4 — accessibility & polish.** Optional progressive reveals (slides
-  target only), density fixes, and the full gate suite on both targets.
+- **S1 — triage.** Read the source material end to end *before* writing
+  anything. Produce, per lecture: a page map (what is on each page), the
+  topic arc (what the lecture is actually about — verify against the pages,
+  not the title), and an ambiguity list. **Interview the operator before S2
+  begins**: unreadable passages, notation that conflicts with earlier
+  lectures, suspected errors in the source, scope boundaries ("is this aside
+  part of the lecture?"). Convention answers go into `conventions.md` the day
+  they're decided.
+- **S2 — draft (two passes).** Pass 1: the complete transcription into
+  `content/lectureNN.tex`, applying the S1 answers under the fidelity
+  contract — content first, no overlay polish yet, compiling clean on both
+  targets. Preserve the source's own structure: its section boundaries, its
+  ordering, its transitional sentences. Pass 2: apply the operator's
+  slide-by-slide review notes, nothing more — pass 2 is their edit, not
+  yours.
+- **S3 — figures.** Reconstruct every figure as TikZ in
+  `figures/lectureNN/`, faithful to the source's geometry, orientation, and
+  labels — verify against the source drawing, not your mental model of the
+  physics. Render-check each figure standalone and in its frame. **Write the
+  alt description into `alt/lectureNN.tex` in the same session** — it is part
+  of making the figure, not a later pass. Reuse existing figures where the
+  source repeats one (`\usealtfrom`); interview the operator when a drawing
+  is ambiguous about what it *means* (not about how it looks — geometry
+  questions you resolve against the source).
+- **S4 — accessibility & polish.** Progressive reveals where they serve a
+  live audience: reveal conceptual chunks, keep closely-related material
+  together, and leave intro/recap/section-opener/Takeaways frames static.
+  Split frames that are too dense rather than shrinking them. Then the full
+  batch gate (below).
 
 ## Interview protocol — when you must stop and ask
 
@@ -89,10 +110,14 @@ that are mathematically sound (proceed, per contract #5).
 
 ## Validation gates (every batch, both targets)
 
-⟨extraction pending: the full tripwire table with meanings and fix patterns —
-see `docs/troubleshooting.md`⟩
+Per lecture: `./course.py build NN` must PASS — it runs the whole suite
+(latexml errors, `[ALT MISSING]`, empty figure `alt`, the malformed-MathML
+counter, per-page accessibility audit) — and `./course.py slides NN` must
+build. When a gate fires, `docs/troubleshooting.md` has the symptom → fix
+table; fix the cause, never suppress the check.
 
-The gate always includes: both targets build clean; the tripwire greps are
-zero; accessibility audit passes; **and a fidelity review** — transcription
-compared against source on both contract axes (prose kept where present;
-derivations complete, step for step). The operator signs off per batch.
+The batch gate adds the **fidelity review**: re-read the transcription
+against the source on both contract axes — prose kept where the source has
+prose; every derivation step-for-step complete. Then the operator signs off,
+and the batch gets its `CHANGELOG.md` row (what landed, what was decided,
+what was flagged). A batch without its ledger row is not done.

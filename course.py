@@ -54,6 +54,14 @@ def base_env():
     texbin = env.get("KIT_TEXBIN")
     if texbin:
         env["PATH"] = texbin + os.pathsep + env["PATH"]
+    # dvisvgm needs the Ghostscript LIBRARY to read preview baseline specials
+    # (BookML image depths); point it at a Homebrew/system libgs when the
+    # environment hasn't already (a user-set LIBGS always wins).
+    if sys.platform == "darwin" and not env.get("LIBGS"):
+        for cand in ("/opt/homebrew/lib/libgs.dylib", "/usr/local/lib/libgs.dylib"):
+            if Path(cand).exists():
+                env["LIBGS"] = cand
+                break
     return env
 
 
@@ -373,6 +381,9 @@ def doctor():
     if dv is not None and "Ghostscript" not in dv:
         print("  warn: dvisvgm has NO Ghostscript library (libgs) -- BookML image-depth "
               "errors expected (baseline-only); install ghostscript to clear")
+    wired = base_env().get("LIBGS")
+    if wired and not os.environ.get("LIBGS"):
+        print(f"  note: LIBGS auto-wired to {wired} for dvisvgm")
     for sty in ("preview.sty", "comment.sty"):
         rc, out = run(["kpsewhich", sty], timeout=60)
         if rc == 0 and out.strip():

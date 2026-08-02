@@ -60,10 +60,12 @@ known-good reference output. Design record: the donor repo's
 Present and smoke-tested: the shared layer (both preambles, macros, course
 identity), both drivers, the `\fig`→`<img alt>` alt-text wiring, `course.py`
 (build / slides / check / index / doctor / clean, with the validation gates
-wired into every build), and the `lecture00` worked example building clean
-through both targets on a stock TeX Live + LaTeXML toolchain.
+wired into every build), `setup.sh` (checked installs + the pinned BookML
+fetch), the four guide chapters in [`docs/`](docs/), the completed agent
+manual, and the `lecture00` worked example building clean through both
+targets on a stock TeX Live + LaTeXML toolchain — no pinning required.
 
-Not yet present: the setup script (`docs/setup.md` is a stub; `course.py
-doctor` already audits the toolchain), the site styling pass (slide cards,
-badges — lands against real content), the guide chapters' full content, and
-the lecture-25 acceptance test.
+Not yet present: the site styling pass (slide cards, badges — deliberately
+lands against real content) and the acceptance test (the donor course's
+lecture 25 re-authored in kit format, checked against its known-good
+reference output).
