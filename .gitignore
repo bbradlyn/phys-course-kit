@@ -1,0 +1,16 @@
+# Build outputs and TeX intermediates (grow this with the tooling)
+*.aux
+*.log
+*.out
+*.toc
+*.nav
+*.snm
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+auxdir/
+bmlimages/
+build/
+*.pdf
+!docs/**/*.pdf
+.DS_Store
