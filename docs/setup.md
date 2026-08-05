@@ -18,7 +18,7 @@ Optional: to receive later kit improvements, add the kit as a remote and
 cherry-pick what you want:
 
 ```
-git remote add kit-upstream https://github.com/OWNER/phys-course-kit
+git remote add kit-upstream https://github.com/bbradlyn/phys-course-kit
 git fetch kit-upstream
 ```
 
