@@ -25,6 +25,15 @@ Per lecture, four stages:
 4. **S4 — accessibility & polish.** Progressive reveals where they help a
    live audience (conceptual chunks — intro/recap/takeaways frames stay
    static), density fixes, and the full gate suite on both targets.
+5. **S5 — deck polish (optional).** S1–S4 delivers the faithful version,
+   and stopping there is normal. If you want more craft — connecting
+   sentences between results, thin slides merged, finer reveal pacing,
+   text-beside-figure layouts — review the rendered PDF and hand the
+   assistant your edits. Your added sentences go in verbatim (the
+   no-inventing rule binds the assistant, not you), and they flow into the
+   web page too, since there is one source. State the same preference twice
+   and it becomes a convention the assistant applies automatically from
+   then on. Gates re-run after.
 
 Batch gate, before moving on: `./course.py build NN` green for every lecture
 in the batch (the check suite runs automatically), `slides NN` green, your

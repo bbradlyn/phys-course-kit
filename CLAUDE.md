@@ -102,6 +102,21 @@ flag.
   together, and leave intro/recap/section-opener/Takeaways frames static.
   Split frames that are too dense rather than shrinking them. Then the full
   batch gate (below).
+- **S5 — deck polish (OPTIONAL, author-driven; after the batch gate).** The
+  S1–S4 output is the faithful version, and it is a complete, valid final
+  state — skipping S5 is normal. If the author wants more craft, open the
+  round by presenting the rendered PDF and flagging candidates: frames with
+  under ~4 content lines that could merge into a neighbour, derivation
+  frames that could reveal in finer steps, frames that might read better
+  with text beside the figure. Then apply ONLY what the author supplies or
+  approves. Their added connecting sentences go in verbatim — author-written
+  narration is not an invention of yours; the fidelity contract binds you,
+  not them. Because the source is single, S5 narration flows into the web
+  page too — intended: the author is revising their course, not just a deck.
+  Re-run the full gates on both targets afterwards, record every S5 edit in
+  `notes/lectureNN.md`, and when the author states the same polish
+  preference a second time, graduate it into `conventions.md` so S4 applies
+  it by default from then on.
 
 ## Interview protocol — when you must stop and ask
 
