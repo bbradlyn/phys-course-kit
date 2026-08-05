@@ -1,0 +1,87 @@
+/* ==========================================================================
+   Kit site styling — a light layer over BookML's plain style.
+   Loaded last (GNUmakefile adds it via latexmlpost --css), so plain rules
+   lose ties. Palette mirrors shared/palette.tex; keep the two in sync.
+   ========================================================================== */
+:root {
+  --physblue:   #13294B;
+  --physorange: #C84113;
+  --physgray:   #F3F4F6;
+  --physink:    #111827;
+  --rule:       #d4d7dc;
+  --muted:      #565d69;   /* ≥7:1 on white */
+  color-scheme: light;
+}
+
+/* Single forced-light theme: LaTeXML's stock CSS carries a
+   prefers-color-scheme dark variant that would sit our light palette on a
+   black page. Loading last, these unqualified rules win in both schemes.
+   (A real dark theme needs an SVG figure-palette strategy first — deferred.) */
+html, body { background: #fff; }
+body { color: var(--physink); }
+
+/* ---- reading column and base typography ---------------------------------- */
+.ltx_page_main {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+  color: var(--physink);
+  font-family: Georgia, "Times New Roman", serif;
+  line-height: 1.55;
+}
+a { color: var(--physblue); }
+
+/* ---- page chrome: the prev/next header and footer ------------------------ */
+.ltx_page_header, .ltx_page_footer {
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  font-size: 0.85rem;
+  background: var(--physgray);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 0.4rem 0.9rem;
+  margin: 0.8rem 0;
+}
+.ltx_page_header { position: sticky; top: 0.4rem; z-index: 10; }
+.ltx_page_header a, .ltx_page_footer a {
+  color: var(--physblue);
+  text-decoration: none;
+}
+.ltx_page_header a:hover, .ltx_page_header a:focus,
+.ltx_page_footer a:hover, .ltx_page_footer a:focus {
+  text-decoration: underline;
+}
+
+/* ---- headings ------------------------------------------------------------ */
+h1.ltx_title_document, .ltx_title_section, .ltx_title_subsection {
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  color: var(--physblue);
+}
+h1.ltx_title_document { font-size: 1.6rem; line-height: 1.25; }
+.ltx_title_section { margin-top: 2.2rem; }
+.ltx_tag_section { color: var(--physorange); }
+
+/* ---- every frame is a card ----------------------------------------------- */
+section.ltx_subsection {
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--physblue);
+  border-radius: 6px;
+  padding: 0.25rem 1.25rem 0.75rem;
+  margin: 1.5rem 0;
+  background: #fff;
+}
+section.ltx_subsection > .ltx_title_subsection {
+  margin-top: 0.6em;
+  font-size: 1.05rem;
+}
+
+/* ---- figures ------------------------------------------------------------- */
+img.ltx_graphics { max-width: 100%; height: auto; }
+
+/* ---- data tables (booktabs flavour) -------------------------------------- */
+.ltx_tabular { border-collapse: collapse; margin: 0.6rem auto; }
+.ltx_tabular .ltx_th, .ltx_tabular .ltx_td { padding: 0.3rem 0.7rem; }
+.ltx_tabular .ltx_th { font-family: "Helvetica Neue", Arial, sans-serif; }
+
+/* ---- footer credit ------------------------------------------------------- */
+.ltx_page_logo { font-size: 0.75rem; color: var(--muted); margin: 1rem 0; }
+.ltx_page_logo a { color: var(--muted); }

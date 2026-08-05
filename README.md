@@ -65,6 +65,8 @@ TeX installs, no version juggling.
 | `CLAUDE.md` | The AI assistant's operating manual |
 | `CHANGELOG.md` | Append-only course ledger (rules inside — keep the discipline) |
 | `conventions.md` | Your course's durable decisions, as they get made |
+| `course.py` | The one-command driver: every build, check, and report |
+| `GNUmakefile` | Configuration for BookML (a make-based tool `course.py` drives) — you never run `make` yourself |
 
 ## What the gates check
 
@@ -86,6 +88,8 @@ handwritten notes, re-authored one of that course's lectures through the
 full workflow — interviews, figures, alt text, gates — and the result
 matched the course's validated version on every content check. (One
 difference favored the kit: its computed band-structure figure exposed a
-drawing error in the original.) The web output currently ships with
-BookML's plain styling, which passes every audit; card styling in the
-course palette is optional polish. Development history: `CHANGELOG.md`.
+drawing error in the original.) The web output layers a light
+course-palette style over BookML's plain theme — frame cards, palette
+headings, sticky page navigation — in a single forced-light scheme (a real
+dark theme awaits an SVG figure-palette strategy). Development history:
+`CHANGELOG.md`.
