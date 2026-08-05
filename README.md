@@ -7,11 +7,12 @@ that gates every build — with an optional, matching **beamer slide deck** per
 lecture from the same source.
 
 **Who this is for:** a LaTeX-competent physicist working with a capable AI
-assistant. Neither of you needs prior experience with this pipeline: the
-human guide lives in [`docs/`](docs/), and [`CLAUDE.md`](CLAUDE.md) is the
-assistant's operating manual — including the transcription workflow for
-turning handwritten notes into course pages, and the questions it should
-stop and ask you along the way.
+assistant — any capable assistant, not one vendor's. Neither of you needs
+prior experience with this pipeline: the human guide lives in
+[`docs/`](docs/), and [`AGENTS.md`](AGENTS.md) is the assistant's operating
+manual — including the transcription workflow for turning handwritten notes
+into course pages, and the questions it should stop and ask you along the
+way. (A `CLAUDE.md` stub points Claude-family tools at the same manual.)
 
 ## How it works
 
@@ -44,7 +45,7 @@ web-only or slides-only can creep into your source.
 4. `./course.py build 00` — the sample lecture should PASS with every gate
    green. `./course.py doctor` explains anything that doesn't.
 5. Read [`docs/workflow.md`](docs/workflow.md), point your AI assistant at
-   [`CLAUDE.md`](CLAUDE.md), and start transcribing lecture 1. (Delete the
+   [`AGENTS.md`](AGENTS.md), and start transcribing lecture 1. (Delete the
    `lecture00` sample files before your first real publish.)
 
 A standard TeX Live plus LaTeXML on PATH is all that's expected — no pinned
@@ -62,7 +63,7 @@ TeX installs, no version juggling.
 | `shared/` | Course identity, macros, the two preambles, the palette |
 | `notes/` | Per-lecture transcription work records (make batches resumable) |
 | `docs/` | The human guide: setup, authoring, workflow, troubleshooting |
-| `CLAUDE.md` | The AI assistant's operating manual |
+| `AGENTS.md` | The AI assistant's operating manual (`CLAUDE.md` is a pointer stub for Claude-family tools) |
 | `CHANGELOG.md` | Append-only course ledger (rules inside — keep the discipline) |
 | `conventions.md` | Your course's durable decisions, as they get made |
 | `course.py` | The one-command driver: every build, check, and report |

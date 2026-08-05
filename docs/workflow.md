@@ -2,10 +2,18 @@
 
 Three loops at three timescales: transcription (per lecture batch), the
 day-of-lecture minute, and publishing. The transcription loop is written as
-executable instructions for your AI assistant in `CLAUDE.md`; this page is
+executable instructions for your AI assistant in `AGENTS.md`; this page is
 the human overview of the same process.
 
-## Transcribing lectures (S1 → S4, in batches of 3–5)
+## Transcribing lectures (S0 → S5, in batches of 3–5)
+
+One conditional step comes before everything: if your course arrives as a
+single continuous document (a full semester of notes in one PDF) rather
+than per-lecture files, the assistant will first ask you where the lecture
+boundaries fall — **tell it** (your syllabus knows). It can detect them
+instead, but only if you ask it to, and it will warn you first: scanning a
+whole semester's document is expensive in assistant working memory, and
+its coarse skim is a proposal for your confirmation either way.
 
 Per lecture, four stages:
 
