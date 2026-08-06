@@ -20,3 +20,6 @@ bookml/
 /lecture*.tex
 # BookML final packages land at the root — outputs, never committed
 /*.zip
+# Raw lecture source material — local only (large, sometimes private)
+source/*
+!source/README.md

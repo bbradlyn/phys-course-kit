@@ -22,17 +22,18 @@ Per lecture, four stages:
    the ambiguities before drafting starts** — unreadable passages, notation
    choices that will bind later lectures, scope calls. Answers that bind the
    future go straight into `conventions.md`.
-2. **S2 — draft, two passes.** Pass 1: the full transcription into
-   `content/lectureNN.tex`, under the fidelity contract (your prose kept
-   where it exists; derivations step for step). You review slide by slide;
-   pass 2 applies your notes.
-3. **S3 — figures.** Every figure reconstructed as TikZ, render-checked
-   (`./course.py figure NN name` renders one figure standalone in seconds),
-   **with alt text written in the same session**. You review geometry and
-   approve the descriptions.
-4. **S4 — accessibility & polish.** Progressive reveals where they help a
-   live audience (conceptual chunks — intro/recap/takeaways frames stay
-   static), density fixes, and the full gate suite on both targets.
+2. **S2 — draft, two passes.** The assistant writes the full transcription
+   into `content/lectureNN.tex` under the fidelity contract (your prose
+   kept where it exists; derivations step for step). You review it slide by
+   slide; the assistant applies your notes as pass 2 — pass 2 is your edit,
+   nothing more.
+3. **S3 — figures.** The assistant reconstructs every figure as TikZ,
+   render-checks each one, and **writes the alt text in the same session**.
+   You review the geometry and approve the descriptions.
+4. **S4 — accessibility & polish.** The assistant adds progressive reveals
+   where they help a live audience (conceptual chunks —
+   intro/recap/takeaways frames stay static), fixes density, and runs the
+   full gate suite on both targets.
 5. **S5 — deck polish (optional).** S1–S4 delivers the faithful version,
    and stopping there is normal. If you want more craft — connecting
    sentences between results, thin slides merged, finer reveal pacing,
@@ -43,11 +44,13 @@ Per lecture, four stages:
    and it becomes a convention the assistant applies automatically from
    then on. Gates re-run after.
 
-Batch gate, before moving on: `./course.py build NN` green for every lecture
-in the batch (the check suite runs automatically), `slides NN` green, your
-sign-off on content and alt text, and a `CHANGELOG.md` row recording the
-batch. The fidelity review — transcription against source on both the prose
-and math axes — is part of that sign-off, not an extra.
+Batch gate, before moving on: the assistant shows you `./course.py build NN`
+green for every lecture in the batch (the check suite runs automatically)
+and `slides NN` green, re-reads its transcription against the source on
+both fidelity axes, and appends the batch's `CHANGELOG.md` row. **Your
+part is the sign-off** — content and alt text, with the assistant's
+fidelity self-review in front of you. Nothing proceeds past a batch you
+haven't signed.
 
 ## The day of lecture
 
@@ -79,12 +82,16 @@ actual lectures.
 The slides target is a **gate, not just an output**: even if you never
 lecture from decks, `./course.py slides NN` must stay green — it proves the
 content still compiles under both drivers, i.e. nothing target-specific has
-crept into the single source. Run it as part of every batch gate.
+crept into the single source. The assistant runs it at every batch gate;
+run it yourself after any hand edit.
 
 ## Ledger duties (what keeps the project recoverable)
 
-- Every working session that changes content or process appends a row to
-  `CHANGELOG.md` (append-only — never edit past rows).
-- Decisions that bind future lectures get distilled into `conventions.md`.
+- Every working session that changes content or process gets a row in
+  `CHANGELOG.md` (append-only — never edit past rows). The assistant does
+  this as part of its contract; when you edit by hand, the duty is yours.
+- Decisions that bind future lectures get distilled into `conventions.md` —
+  including taste: house terminology, table styles, pacing preferences. An
+  unrecorded preference is one the assistant is *forbidden* to guess at.
 - When a gate fires, `docs/troubleshooting.md` maps the symptom to its
   meaning and fix; if you learn a new failure mode, add a row there too.

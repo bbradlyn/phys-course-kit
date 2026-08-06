@@ -1,7 +1,11 @@
 # Authoring guide — the content subset, with reasons
 
-You author exactly one file per lecture: `content/lectureNN.tex`, in a subset
-of LaTeX that both drivers accept. `content/lecture00.tex` is the living
+Reference for whoever writes lecture content — normally the AI assistant
+during transcription, and you whenever you author or edit by hand. "You"
+below means the author of the moment; the rules bind both of you equally.
+
+Each lecture is exactly one file: `content/lectureNN.tex`, in a subset of
+LaTeX that both drivers accept. `content/lecture00.tex` is the living
 reference — copy its shape. Rules below carry their reasons.
 
 ## Anatomy of a lecture file

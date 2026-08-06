@@ -6,20 +6,29 @@ figures as SVG images with author-written alt text, and a validation suite
 that gates every build — with an optional, matching **beamer slide deck** per
 lecture from the same source.
 
-**Who this is for:** a LaTeX-competent physicist working with a capable AI
-assistant — any capable assistant, not one vendor's. Neither of you needs
-prior experience with this pipeline: the human guide lives in
-[`docs/`](docs/), and [`AGENTS.md`](AGENTS.md) is the assistant's operating
-manual — including the transcription workflow for turning handwritten notes
-into course pages, and the questions it should stop and ask you along the
-way. (A `CLAUDE.md` stub points Claude-family tools at the same manual.)
+**Who this is for:** a LaTeX-competent physicist. No prior experience with
+this pipeline — or with directing AI — is assumed.
+
+**How the work gets done:** the transcription workflow is designed around an
+*agentic* AI tool — one that works inside a repository: reading files,
+running commands, editing sources (Claude Code, Codex CLI, Cursor, and
+similar; any capable one, not one vendor's). You open this repository in
+such a tool; the assistant reads [`AGENTS.md`](AGENTS.md) — its operating
+manual — and does the production work in stages, stopping at fixed points to
+ask you questions and show you drafts. Your side of that loop — the answers,
+reviews, and sign-offs — is described in [`WORKFLOW.md`](WORKFLOW.md).
+(A `CLAUDE.md` stub points Claude-family tools at the same manual. And no
+assistant is required: everything can be hand-authored —
+[`content/lecture00.tex`](content/lecture00.tex) is the format,
+[`docs/authoring.md`](docs/authoring.md) the rules, and `course.py` builds
+and checks your work the same way.)
 
 ## How it works
 
-You author **one file per lecture** — `content/lectureNN.tex`, written in a
-frame-structured, engine-neutral LaTeX subset (the worked example is
-[`content/lecture00.tex`](content/lecture00.tex)). Two thin wrappers render
-it:
+Each lecture is **one authored file** — `content/lectureNN.tex`, written in
+a frame-structured, engine-neutral LaTeX subset (the worked example is
+[`content/lecture00.tex`](content/lecture00.tex)) — by the assistant during
+transcription, or by you directly. Two thin wrappers render it:
 
 ```
 content/lectureNN.tex ──┬─▶ drivers/web.tex    → LaTeXML + BookML → accessible HTML
@@ -44,8 +53,15 @@ web-only or slides-only can creep into your source.
    checksum-verified release.
 4. `./course.py build 00` — the sample lecture should PASS with every gate
    green. `./course.py doctor` explains anything that doesn't.
-5. Read [`docs/workflow.md`](docs/workflow.md), point your AI assistant at
-   [`AGENTS.md`](AGENTS.md), and start transcribing lecture 1. (Delete the
+5. Put your lecture source material — scanned notes, PDFs — in `source/`
+   (it stays out of git).
+6. Open the repository in your agentic AI tool and tell it:
+   *"Read AGENTS.md, then begin lecture 1 from source/lecture01.pdf."*
+   The assistant runs the transcription stages and interviews you along the
+   way; [`WORKFLOW.md`](WORKFLOW.md) describes your side of that
+   loop. Working without an assistant instead? Copy the shape of
+   [`content/lecture00.tex`](content/lecture00.tex) under the rules in
+   [`docs/authoring.md`](docs/authoring.md). (Either way: delete the
    `lecture00` sample files before your first real publish.)
 
 A standard TeX Live plus LaTeXML on PATH is all that's expected — no pinned
@@ -55,15 +71,17 @@ TeX installs, no version juggling.
 
 | Path | What it holds |
 |---|---|
-| `content/` | Canonical lecture sources — the only files you author |
+| `source/` | Your raw lecture material (scans, notes PDFs) — untracked by git |
+| `content/` | Canonical lecture files — the only authored LaTeX (assistant- or hand-written) |
 | `figures/` | TikZ figure sources, one directory per owning lecture |
 | `alt/` | Figure alt-text sidecars, written when the figure is made |
 | `announcements/` | Per-lecture, day-of-editable, slides-only |
 | `drivers/` | The two build wrappers (web primary, slides optional) |
 | `shared/` | Course identity, macros, the two preambles, the palette |
 | `notes/` | Per-lecture transcription work records (make batches resumable) |
-| `docs/` | The human guide: setup, authoring, workflow, troubleshooting |
+| `WORKFLOW.md` | **Your manual**: the loops you're part of — reviews, day-of-lecture, publishing |
 | `AGENTS.md` | The AI assistant's operating manual (`CLAUDE.md` is a pointer stub for Claude-family tools) |
+| `docs/` | Reference shelf — setup details, authoring rules, the gate table; the assistant works from these, you dip in as needed |
 | `CHANGELOG.md` | Append-only course ledger (rules inside — keep the discipline) |
 | `conventions.md` | Your course's durable decisions, as they get made |
 | `course.py` | The one-command driver: every build, check, and report |

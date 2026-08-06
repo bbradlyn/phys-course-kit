@@ -9,7 +9,7 @@ ask.
 
 > This manual is operational. Companion references: `docs/authoring.md` (the
 > content subset and its reasons), `docs/troubleshooting.md` (what each gate
-> means when it fires), `docs/workflow.md` (the human-side view of this same
+> means when it fires), `WORKFLOW.md` (the human-side view of this same
 > process).
 
 ## The contract
@@ -86,8 +86,10 @@ flag.
   do not read every page) and treat the result as a proposal. Either way,
   boundaries are confirmed at interview before S1 begins, and each
   lecture's page range is recorded in its `notes/lectureNN.md`.
-- **S1 — triage.** Read the source material end to end *before* writing
-  anything. Produce, per lecture: a page map (what is on each page), the
+- **S1 — triage.** Source material lives in `source/`
+  (`source/lectureNN.pdf` by convention; ask the operator if a lecture's
+  file isn't there — never hunt elsewhere in the filesystem for it). Read
+  the source material end to end *before* writing anything. Produce, per lecture: a page map (what is on each page), the
   topic arc (what the lecture is actually about — verify against the pages,
   not the title), and an ambiguity list. **Interview the operator before S2
   begins**: unreadable passages, notation that conflicts with earlier
