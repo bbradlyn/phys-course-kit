@@ -73,6 +73,9 @@ your course makes its own calls.
 - Reproduce what a source drawing *says*, not every pen stroke. Board marks
   that record the lecturer's thinking (traversal arrows, lassos, underlines)
   are omitted unless they carry content.
+- **Never encode meaning by colour alone.** Pair colour with position, shape,
+  a label, or line style — the figure must read identically to colour-blind
+  students and in a grayscale printout.
 - **Colour a TikZ node's text with `text=<colour>`, never a bare colour name.**
   A bare colour in a node's option list sets `color=`, which also sets the
   fill and silently overrides a `fill=white` coming from the node style;

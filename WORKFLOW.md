@@ -50,7 +50,8 @@ and `slides NN` green, re-reads its transcription against the source on
 both fidelity axes, and appends the batch's `CHANGELOG.md` row. **Your
 part is the sign-off** — content and alt text, with the assistant's
 fidelity self-review in front of you. Nothing proceeds past a batch you
-haven't signed.
+haven't signed. (After sign-off the assistant also condenses its working
+notes to a durable per-lecture record — the verbose logs live on in git.)
 
 ## The day of lecture
 

@@ -22,7 +22,10 @@ ask.
 2. **Math fidelity — show, don't tell.** Transcribe derivations as written,
    step for step. Never compress a derivation into narration ("after some
    algebra…"), never skip intermediate lines the source shows, never
-   rearrange a derivation into a form you find cleaner.
+   rearrange a derivation into a form you find cleaner. And never introduce
+   a more specialized formula or representation before the source does —
+   keep the notation as abstract as the source keeps it, for exactly as
+   long as it does.
 3. **Single source.** You author exactly one file per lecture
    (`content/lectureNN.tex`), in the engine-neutral subset both drivers
    accept. Never write target-specific content into a lecture body; if a
@@ -70,7 +73,9 @@ every gate failure to its meaning and fix.
 Work in batches of three to five lectures; each stage completes for the whole
 batch before the next begins, and the operator reviews at every stage
 boundary. Never mark a stage done with a failing compile or an unanswered
-flag.
+flag. **Before starting any new batch**, re-read `conventions.md` and the
+previous batch's `notes/` files — they carry decisions and lessons this
+manual cannot.
 
 - **S0 — source segmentation (ONLY when the source is not already
   per-lecture files).** If the course arrives as one continuous document — a
@@ -148,6 +153,10 @@ Ask at these moments, and batch your questions:
 - Alt-text approval and batch sign-off at each gate.
 - Anything the flagging discipline (contract #5) escalates.
 
+Bring every escalation **with a recommended resolution** — your proposed
+reading or fix and the reason — never as a bare question. The operator
+decides fastest, and best, between concrete options.
+
 Do not ask about: choices the conventions file already settles, cosmetic
 matters you can decide and note in the ledger, or low-confidence readings
 that are mathematically sound (proceed, per contract #5).
@@ -165,3 +174,29 @@ against the source on both contract axes — prose kept where the source has
 prose; every derivation step-for-step complete. Then the operator signs off,
 and the batch gets its `CHANGELOG.md` row (what landed, what was decided,
 what was flagged). A batch without its ledger row is not done.
+
+**Close-out, after sign-off:** condense each lecture's `notes/lectureNN.md`
+to its durable record — final frame and figure inventory, lecture-local
+decisions worth keeping, hooks for future work — and delete the verbose
+working log (git keeps the history; "condense" means delete, not archive).
+Promote any generalizable lesson into `conventions.md` on the way through.
+
+## If your tool can delegate to subagents (optional)
+
+Solo work through every stage is fully supported; none of this is required.
+But when batches are wide, a conductor/worker split pays off:
+
+- **You act as conductor**: you own cross-lecture continuity — `shared/`,
+  `conventions.md`, the ledgers, and every interview with the operator.
+- **Workers stay lecture-local**: one worker touches only its lecture's
+  `content/`, `figures/`, `alt/`, and `notes/` files. Workers *propose*
+  changes to shared files or conventions in their notes; you decide.
+- **Filter worker flags yourself** by the same calibration as contract #5:
+  adopt-and-proceed on readings that are mathematically sound, verify
+  questionable parses against the rendered source pages, and bring the
+  operator only the genuinely major items — each with your recommended
+  resolution.
+- **Choose fan-out by load**: for a figure-dense batch (roughly ten or more
+  figures), one worker per figure with standalone render-checks, then a
+  per-lecture pass to integrate; otherwise one worker per lecture is
+  simpler and keeps each lecture's figures stylistically coherent.
