@@ -6,8 +6,11 @@
 % Growth conventions:
 %   - Add macros here the FIRST time a second lecture needs them; a macro used
 %     by one lecture may start lecture-local in its content file.
-%   - Use \providecommand when promoting a macro that lectures already define
-%     locally, so existing content keeps compiling during the migration.
+%   - Promoting a macro is TWO edits, not one: add it here as \providecommand
+%     AND delete the local definition from the lecture that had it.  This file
+%     is loaded before any lecture body, so a surviving local \newcommand dies
+%     with "Command \foo already defined" -- \providecommand here does NOT
+%     rescue it.  Re-run the donor lecture's gates after every promotion.
 %   - Record each promotion in CHANGELOG.md.
 % ===========================================================================
 
@@ -26,3 +29,9 @@
 % Set-builder and definitional equality
 \newcommand{\setof}[2]{\left\{\,#1\,\middle|\,#2\,\right\}}
 \newcommand{\defeq}{\coloneqq}
+
+% Upright space-group / little-group symbols.  Promoted here from lecture25's
+% local definition when lecture12 became the second lecture to need it
+% (lecture25's local \newcommand was deleted to complete the promotion --
+% the two-edit rule in the growth note above).
+\providecommand{\sg}[1]{\mathrm{#1}}

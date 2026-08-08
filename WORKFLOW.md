@@ -26,7 +26,9 @@ Per lecture, four stages:
    into `content/lectureNN.tex` under the fidelity contract (your prose
    kept where it exists; derivations step for step). You review it slide by
    slide; the assistant applies your notes as pass 2 — pass 2 is your edit,
-   nothing more.
+   nothing more. Figures wait for this: the assistant starts S3 only once
+   you've signed off pass 2, unless you explicitly tell it to skip that
+   review.
 3. **S3 — figures.** The assistant reconstructs every figure as TikZ,
    render-checks each one, and **writes the alt text in the same session**.
    You review the geometry and approve the descriptions.

@@ -34,11 +34,26 @@ written down — fidelity forbids it from inventing style.
   breach prose fidelity.
 - Write tensor products explicitly (`\otimes`) even where the source juxtaposes
   the factors, so the product can never be misread as a matrix product.
+- **Never stack case labels with `\genfrac`** (a zero-thickness fraction used to
+  put `+ \to \Gamma_1` over `- \to \Gamma_2`). LaTeXML cannot parse it and the
+  formula drops out of parsed MathML — same failure family as the labelled-matrix
+  rule above. Put the branch assignment in a following sentence instead.
+- **A math fragment must be a complete expression.** `$+ \to \Gamma_1$` is a
+  unary `+` with no operand and goes unparsed; name the eigenvalue instead —
+  "the eigenvalue $+1$ labels $\Gamma_1$". This bites whenever a board `±`
+  branch is split into its two cases.
+- **Character tables are real tables**, never matrices or aligned math: a
+  `tabular` with `\toprule`/`\midrule`/`\bottomrule` (booktabs is loaded on both
+  targets), irrep label in the first column, one column per class, wrapped in
+  `center`. Same reasoning as the labelled-matrix rule — a screen reader gets
+  proper row and column structure.
 
 ## Example entries: notation (replace with your course's own decisions)
 
 Worked examples of the right granularity for this file — delete them as
-your course makes its own calls.
+your course makes its own calls. (A course that adopts an example makes it
+**binding** by rewriting this section in its own first batch — until then, an
+assistant reads these as template filler, not house style.)
 
 - *Example:* Pauli matrices carry **superscript** indices: `\sigma^0`
   (identity), `\sigma^x,\sigma^y,\sigma^z`; `\tau^a` for a second two-level
@@ -56,6 +71,11 @@ your course makes its own calls.
 - *Example:* `\vec e_1,\vec e_2` for primitive vectors, `\vec R` for Bravais
   translations; Dirac notation only via `\ket`/`\bra`/`\braket`; say
   "irreps", never "irreducibles".
+- *Example:* The **reciprocal-lattice** translation group is $\check T$
+  (`\check T`), distinguished by the check accent from the direct-lattice
+  translation group $T$. Gloss it in words the first time a lecture uses it.
+- *Example:* Seitz symbols are written `\{g|\vec d\}`; barred symbols ($\bar g$, $\bar G_k$)
+  are the cogroup elements, i.e. the point-group parts modulo translations.
 
 ## Frame structure
 - `\announcementsframe` goes directly after the title frame.
@@ -86,6 +106,18 @@ your course makes its own calls.
 - TikZ `scale=` does **not** scale text nodes, so shrinking a figure to fit a
   frame makes its labels relatively *larger*. Shrinking is not a free density
   fix — re-lay the frame instead (e.g. `columns`).
+- **Multi-state figures (a figure revealed in stages) are two files with a pinned,
+  identical bounding box.** Put `\useasboundingbox (x1,y1) rectangle (x2,y2);` with
+  the *same* rectangle at the top of every state, or the picture rescales and jumps
+  between overlays. Everything structural — axes, all ticks, and any annotation the
+  argument leans on — goes in *every* state as an always-on layer, so only the
+  content under discussion changes. Select them with
+  `\only<1>{\fig{...-half}{...}}` and `\only<2->{\fig{...}{...}}`: the closed range
+  is dropped by the web target (correct — a partial state is a teaching view), and
+  the **open** range is what makes the real figure survive flattening. Give the
+  partial state its own alt entry anyway.
+- `columns` reserves **no trailing vertical space** — body text placed after
+  `\end{columns}` collides with the tallest column. Follow it with `\medskip`.
 - When two figures show the same path or region, they must label it
   identically. Symmetry-equivalent representatives are a free choice, which is
   precisely why the choice has to agree across figures: a student who sees

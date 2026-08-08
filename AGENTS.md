@@ -82,7 +82,12 @@ manual cannot.
   full-semester notes PDF, a book draft — lecture boundaries must be fixed
   before any per-lecture work. **First move: ask the operator for the
   boundaries.** They usually know them (syllabus, lecture dates, chapter
-  breaks). Offer automatic detection only as an explicit opt-in, and when
+  breaks). Ask **before** opening the document to look for boundaries
+  yourself — even a cheap skim or a text-layer probe: you cannot know a probe
+  is cheap until you have already spent the context, and a self-found
+  boundary presented for confirmation invites a rubber-stamp where the
+  operator's own answer is the authority (2026-08 revalidation ruling).
+  Offer automatic detection only as an explicit opt-in, and when
   you offer it, state the cost plainly: scanning a full-semester document
   end to end can consume several sessions' worth of your context, so
   operator-supplied boundaries are strongly preferred — the operator cannot
@@ -111,7 +116,10 @@ manual cannot.
   stay the source's; the framing is a proposal like any other. Pass 2:
   apply the operator's slide-by-slide review notes, nothing more — pass 2
   is their edit, not yours.
-- **S3 — figures.** Reconstruct every figure as TikZ in
+- **S3 — figures.** S3 begins only after the operator has signed off pass 2
+  — figures drawn against un-reviewed framing are rework waiting to happen —
+  unless the operator explicitly says to skip the pass-2 sign-off.
+  Reconstruct every figure as TikZ in
   `figures/lectureNN/`, faithful to the source's geometry, orientation, and
   labels — verify against the source drawing, not your mental model of the
   physics. Render-check each figure standalone (`./course.py figure NN name`
@@ -166,7 +174,9 @@ that are mathematically sound (proceed, per contract #5).
 Per lecture: `./course.py build NN` must PASS — it runs the whole suite
 (latexml errors, `[ALT MISSING]`, empty figure `alt`, the malformed-MathML
 counter, per-page accessibility audit) — and `./course.py slides NN` must
-build. When a gate fires, `docs/troubleshooting.md` has the symptom → fix
+PASS: it builds the deck and fails on any overfull box beyond sub-line
+tolerance (>2pt), so a green run means the deck *fits*, not merely that it
+compiled. When a gate fires, `docs/troubleshooting.md` has the symptom → fix
 table; fix the cause, never suppress the check.
 
 The batch gate adds the **fidelity review**: re-read the transcription

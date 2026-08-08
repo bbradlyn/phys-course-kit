@@ -161,6 +161,32 @@ def build_web(nn, keep_announcements=False):
 # slides build (latexmk)
 # ---------------------------------------------------------------------------
 
+# Sub-line bottom-margin tightness; anything larger clips content.  (The
+# 2026-08 revalidation found an 18.6pt clipped frame behind four "green"
+# builds: latexmk -c had deleted the log before anyone could grep it, so the
+# overfull check was silently vacuous.  The log is now parsed BEFORE cleanup.)
+OVERFULL_TOLERANCE_PT = 2.0
+
+
+def check_boxes(log_path):
+    """Parse a retained latexmk .log for box warnings.
+
+    Returns (over, under, bad): sizes (pt) of every Overfull box, the count of
+    Underfull warnings, and the raw log lines of Overfull boxes larger than
+    OVERFULL_TOLERANCE_PT (the ones that fail the gate)."""
+    over, under, bad = [], 0, []
+    for line in log_path.read_text(errors="replace").splitlines():
+        if line.startswith("Underfull \\"):
+            under += 1
+        elif line.startswith("Overfull \\"):
+            m = re.search(r"\(([0-9.]+)pt", line)
+            pts = float(m.group(1)) if m else 0.0
+            over.append(pts)
+            if pts > OVERFULL_TOLERANCE_PT:
+                bad.append(line.strip())
+    return over, under, bad
+
+
 def build_slides(nn):
     SLIDES.mkdir(parents=True, exist_ok=True)
     job = f"lecture{nn}-slides"
@@ -171,6 +197,28 @@ def build_slides(nn):
     if rc != 0:
         print(out[-1500:])
         print(f"SLIDES FAILED (latexmk exit {rc})")
+        return False
+    log = SLIDES / (job + ".log")
+    if not log.exists():
+        # A silent skip must never read as a pass (the lesson this check
+        # exists to encode).  rc==0 with no log means latexmk did no work.
+        print(f"  boxes: NOT CHECKED -- no log at build/slides/{job}.log "
+              "(latexmk skipped the build?); ./course.py clean, then rebuild")
+        over, under, bad = [], 0, []
+    else:
+        over, under, bad = check_boxes(log)
+        if over or under:
+            detail = f"{len(over)} overfull (worst {max(over):.1f}pt)" if over \
+                else "0 overfull"
+            print(f"  boxes: {detail}, {under} underfull"
+                  + ("" if bad else " -- within tolerance"))
+        else:
+            print("  boxes: clean")
+    if bad:
+        for line in bad[:10]:
+            print(f"    {line}")
+        print(f"SLIDES FAILED (overfull > {OVERFULL_TOLERANCE_PT:g}pt -- "
+              f"content may be clipped; log retained: build/slides/{job}.log)")
         return False
     run(["latexmk", "-c", f"-jobname={job}",
          f"-output-directory={SLIDES.relative_to(ROOT)}", "drivers/slides.tex"])
