@@ -161,10 +161,10 @@ def build_web(nn, keep_announcements=False):
 # slides build (latexmk)
 # ---------------------------------------------------------------------------
 
-# Sub-line bottom-margin tightness; anything larger clips content.  (The
-# 2026-08 revalidation found an 18.6pt clipped frame behind four "green"
-# builds: latexmk -c had deleted the log before anyone could grep it, so the
-# overfull check was silently vacuous.  The log is now parsed BEFORE cleanup.)
+# Sub-line bottom-margin tightness; anything larger clips content.  (An
+# 18.6pt clipped frame once hid behind four "green" builds: latexmk -c had
+# deleted the log before anyone could grep it, so the overfull check was
+# silently vacuous.  The log is therefore parsed BEFORE cleanup.)
 OVERFULL_TOLERANCE_PT = 2.0
 
 

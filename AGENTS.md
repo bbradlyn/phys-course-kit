@@ -86,7 +86,7 @@ manual cannot.
   yourself — even a cheap skim or a text-layer probe: you cannot know a probe
   is cheap until you have already spent the context, and a self-found
   boundary presented for confirmation invites a rubber-stamp where the
-  operator's own answer is the authority (2026-08 revalidation ruling).
+  operator's own answer is the authority.
   Offer automatic detection only as an explicit opt-in, and when
   you offer it, state the cost plainly: scanning a full-semester document
   end to end can consume several sessions' worth of your context, so

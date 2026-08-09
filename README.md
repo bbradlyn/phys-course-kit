@@ -82,7 +82,7 @@ TeX installs, no version juggling.
 | `WORKFLOW.md` | **Your manual**: the loops you're part of — reviews, day-of-lecture, publishing |
 | `AGENTS.md` | The AI assistant's operating manual (`CLAUDE.md` is a pointer stub for Claude-family tools) |
 | `docs/` | Reference shelf — setup details, authoring rules, the gate table; the assistant works from these, you dip in as needed |
-| `CHANGELOG.md` | Append-only course ledger (rules inside — keep the discipline) |
+| `CHANGELOG.md` | The kit's release notes — and, in your course, the append-only course ledger (rules inside) |
 | `conventions.md` | Your course's durable decisions, as they get made |
 | `course.py` | The one-command driver: every build, check, and report |
 | `GNUmakefile` | Configuration for BookML (a make-based tool `course.py` drives) — you never run `make` yourself |
@@ -107,8 +107,13 @@ handwritten notes, re-authored one of that course's lectures through the
 full workflow — interviews, figures, alt text, gates — and the result
 matched the course's validated version on every content check. (One
 difference favored the kit: its computed band-structure figure exposed a
-drawing error in the original.) The web output layers a light
-course-palette style over BookML's plain theme — frame cards, palette
-headings, sticky page navigation — in a single forced-light scheme (a real
-dark theme awaits an SVG figure-palette strategy). Development history:
-`CHANGELOG.md`.
+drawing error in the original.) A post-release revalidation repeated the
+exercise cold: a second isolated agent, told only *"begin transcribing
+lecture 12,"* segmented a combined two-lecture scan, ran the whole workflow
+through sign-off and deck polish, and again matched the validated original
+on every probe — surfacing two kit bugs along the way, both since fixed.
+The web output layers a light course-palette style over BookML's plain
+theme — frame cards, palette headings, sticky page navigation — in a single
+forced-light scheme (a real dark theme awaits an SVG figure-palette
+strategy). Release notes: `CHANGELOG.md`; the full development record is in
+this repository's git history.
