@@ -54,6 +54,9 @@ log live in `conventions.md`.
 
 ### Fixed
 
+- The quick start (README and `docs/setup.md`) now says what to do when
+  the course arrives as one document rather than a file per lecture: name
+  that file and give the boundaries, or let the assistant ask (S0).
 - The README's provenance section no longer narrates the development
   history (page counts, individual bugs, kickoff phrases); the release
   notes and git history carry that.

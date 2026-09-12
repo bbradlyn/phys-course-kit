@@ -15,8 +15,10 @@ always know where you stand.
 3. Run `./setup.sh`, then `./course.py build 00` — the sample lecture should
    print `PASS`, with every check passing. Then put your lecture sources in
    `source/` and hand the repository to your agentic AI tool ("Read
-   AGENTS.md, then begin lecture 1 from source/lecture01.pdf") — your side
-   of the loop is `WORKFLOW.md` at the repository root.
+   AGENTS.md, then begin lecture 1 from source/lecture01.pdf" — or, if the
+   whole course is one document, name that file and give the lecture
+   boundaries) — your side of the loop is `WORKFLOW.md` at the repository
+   root.
 
 Optional: to receive later kit improvements, add the kit as a second remote
 and take just the changes you want:

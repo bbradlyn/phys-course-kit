@@ -68,12 +68,17 @@ repository's folder, which is where every command below is typed.
    fetches BookML at one fixed, checksum-verified release.
 4. `./course.py build 00` — the sample lecture should print `PASS`, with
    every check passing. `./course.py doctor` explains anything that doesn't.
-5. Put your lecture source material — scanned notes, PDFs — in `source/`,
-   one file per lecture named `lectureNN.pdf` (`lecture01.pdf`, …); it
-   stays out of git.
+5. Put your lecture source material — scanned notes, PDFs — in `source/`
+   (it stays out of git): either one file per lecture, named
+   `lectureNN.pdf` (`lecture01.pdf`, …), or a single document holding the
+   whole course, in which case the assistant asks you where the lecture
+   boundaries fall before it starts — your syllabus knows.
 6. Open the repository in your agentic AI tool (the kind described under
    "How the work gets done" above) and tell it:
    *"Read AGENTS.md, then begin lecture 1 from source/lecture01.pdf."*
+   With a single course document, name that file instead and give the
+   boundaries up front: *"Read AGENTS.md, then begin lecture 1 from
+   source/notes.pdf; lecture 1 is pages 1–17."*
    The assistant runs the transcription stages and interviews you along the
    way; [`WORKFLOW.md`](WORKFLOW.md) describes your side of that
    loop. Working without an assistant instead? Copy the shape of
