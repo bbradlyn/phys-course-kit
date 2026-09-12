@@ -10,7 +10,7 @@
 %     AND delete the local definition from the lecture that had it.  This file
 %     is loaded before any lecture body, so a surviving local \newcommand dies
 %     with "Command \foo already defined" -- \providecommand here does NOT
-%     rescue it.  Re-run the donor lecture's gates after every promotion.
+%     rescue it.  Re-run the originating lecture's builds after every promotion.
 %   - Record each promotion in CHANGELOG.md.
 % ===========================================================================
 
@@ -30,8 +30,7 @@
 \newcommand{\setof}[2]{\left\{\,#1\,\middle|\,#2\,\right\}}
 \newcommand{\defeq}{\coloneqq}
 
-% Upright space-group / little-group symbols.  Promoted here from lecture25's
-% local definition when lecture12 became the second lecture to need it
-% (lecture25's local \newcommand was deleted to complete the promotion --
-% the two-edit rule in the growth note above).
+% Upright space-group / little-group symbols.  Started lecture-local and was
+% promoted here when a second lecture needed it -- the two-edit rule above:
+% the originating lecture's local \newcommand was deleted in the same change.
 \providecommand{\sg}[1]{\mathrm{#1}}

@@ -1,0 +1,5 @@
+% Kit overlay bridge -- real-TeX side: nothing to do.  Under pdflatex the web
+% preamble's own \item wrapper strips an overlay spec; under LaTeXML the list
+% environments re-let \item past that wrapper, so the stripping lives in the
+% LaTeXML binding kitoverlay.sty.ltxml instead.
+\ProvidesPackage{shared/kitoverlay}[2026/09/12 kit overlay bridge for LaTeXML]

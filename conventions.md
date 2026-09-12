@@ -10,10 +10,12 @@ styles for systematic data. The reason: a faithful
 transcription agent reproduces the *source* wherever the house style isn't
 written down — fidelity forbids it from inventing style.
 
-## Authoring (engine-neutral content subset)
-- Frames, blocks, columns, overlay specs, and course macros only — no
-  target-specific code in lecture bodies; no xparse/expl3 in content files.
-- Overlay specs are optional slide polish; the web target flattens them.
+## Authoring (what both builds understand)
+*Seeded from `docs/authoring.md`, which carries the reasons; a rule corrected
+in one place is corrected in the other in the same change.*
+- Frames, blocks, columns, overlay specs, and course macros only — nothing
+  that only one of the two builds understands; no xparse/expl3 in content files.
+- Overlay specs are optional slide polish; the web build flattens them.
 - Sized delimiters split across alignment rows: use balanced-per-row
   `\left…\right.` / `\left.…\right]` fences — never split a `\Big`-family
   pair across rows (this corrupts the generated MathML).
@@ -28,10 +30,12 @@ written down — fidelity forbids it from inventing style.
   user, and they drop the formula out of parsed MathML. Use a plain
   `pmatrix`/`smallmatrix` and name the basis in the introducing sentence —
   "in the sublattice basis $(A,B)$, …" — which serves every reader identically.
-- Boxed callouts on the source board are *emphasis*, not titled results:
-  render them with `\alert{...}`. Reserve `block`/`alertblock` for material the
-  source actually gave a title; inventing a title to justify a block would
-  breach prose fidelity.
+- A boxed **equation** on the source board keeps its box: `\boxed{...}`
+  inside the math (it renders on both targets; on the web as a MathML box).
+  Boxed **prose** is *emphasis*, not a titled result: render it with
+  `\alert{...}`. Reserve `block`/`alertblock` for material the source
+  actually gave a title; inventing a title to justify a block would breach
+  prose fidelity.
 - Write tensor products explicitly (`\otimes`) even where the source juxtaposes
   the factors, so the product can never be misread as a matrix product.
 - **Never stack case labels with `\genfrac`** (a zero-thickness fraction used to
@@ -59,12 +63,14 @@ assistant reads these as template filler, not house style.)
   (identity), `\sigma^x,\sigma^y,\sigma^z`; `\tau^a` for a second two-level
   (sublattice) space; `\vec\sigma` for the Pauli vector. Sources written with
   subscripts are converted silently.
-- *Example:* Time reversal is $\mathcal{T}$ (macro `\TRS`); complex
-  conjugation is $\mathcal{K}$ (macro `\conj`).
-- *Example:* Upright space-group symbols via an `\sg{...}` macro —
-  lecture-local at first, promoted to `shared/macros.tex` as
-  `\providecommand` the first time a second lecture wants it (the standard
-  promotion path for any macro).
+- *Example:* Time reversal is $\mathcal{T}$ and complex conjugation is
+  $\mathcal{K}$, as macros `\TRS` and `\conj` — a course that adopts this
+  defines them in `shared/macros.tex` (the kit does not ship them).
+- *Example:* Upright space-group symbols via `\sg{...}` (this one the kit
+  does ship, in `shared/macros.tex`). The promotion path for any macro:
+  lecture-local `\newcommand` at first; the first time a second lecture
+  wants it, add it to `shared/macros.tex` as `\providecommand` **and**
+  delete the local definition — two edits (`docs/authoring.md`).
 - *Example:* A mirror's subscript names its plane **normal**; keep
   Hermann–Mauguin-style indices so students can find the group on the Bilbao
   server.
@@ -79,7 +85,29 @@ assistant reads these as template filler, not house style.)
 
 ## Frame structure
 - `\announcementsframe` goes directly after the title frame.
-- Every lecture ends with a **static** Takeaways frame (no reveals).
+- Every lecture ends with a Takeaways frame, built only from the lecture's
+  own concluding sentences — prose fidelity forbids an invented summary.
+
+## Deck (slides only — authored at S5, and only when `\coursedecks` is `yes`)
+- Overlays are optional slide polish; the web build flattens them to the
+  final state (`docs/authoring.md`). A course that does not lecture from
+  slides has none.
+- Reveal conceptual chunks and keep closely related material together;
+  intro, recap, section-opener, and Takeaways frames stay static (no
+  reveals).
+- A frame that overflows the slide is split at a conceptual beat, never
+  shrunk: smaller type is the last resort, and TikZ `scale=` is not a
+  density fix at all (see Figures).
+- **Staged figures (a figure revealed in stages) are two files with a pinned,
+  identical bounding box.** Put `\useasboundingbox (x1,y1) rectangle (x2,y2);` with
+  the *same* rectangle at the top of every state, or the picture rescales and jumps
+  between overlays. Everything structural — axes, all ticks, and any annotation the
+  argument leans on — goes in *every* state as an always-on layer, so only the
+  content under discussion changes. Select them with
+  `\only<1>{\fig{...-half}{...}}` and `\only<2->{\fig{...}{...}}`: the closed range
+  is dropped by the web build (correct — a partial state is a teaching view), and
+  the **open** range is what makes the real figure survive flattening. Give the
+  partial state its own alt entry anyway.
 
 ## Figures & alt text
 - Every figure authored via `\fig{path}{alt-key}`; description written into
@@ -106,16 +134,6 @@ assistant reads these as template filler, not house style.)
 - TikZ `scale=` does **not** scale text nodes, so shrinking a figure to fit a
   frame makes its labels relatively *larger*. Shrinking is not a free density
   fix — re-lay the frame instead (e.g. `columns`).
-- **Multi-state figures (a figure revealed in stages) are two files with a pinned,
-  identical bounding box.** Put `\useasboundingbox (x1,y1) rectangle (x2,y2);` with
-  the *same* rectangle at the top of every state, or the picture rescales and jumps
-  between overlays. Everything structural — axes, all ticks, and any annotation the
-  argument leans on — goes in *every* state as an always-on layer, so only the
-  content under discussion changes. Select them with
-  `\only<1>{\fig{...-half}{...}}` and `\only<2->{\fig{...}{...}}`: the closed range
-  is dropped by the web target (correct — a partial state is a teaching view), and
-  the **open** range is what makes the real figure survive flattening. Give the
-  partial state its own alt entry anyway.
 - `columns` reserves **no trailing vertical space** — body text placed after
   `\end{columns}` collides with the tallest column. Follow it with `\medskip`.
 - When two figures show the same path or region, they must label it

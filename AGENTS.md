@@ -1,16 +1,28 @@
 # Agent operating manual — phys-course-kit
 
 You are the transcription and conversion agent for a university physics
-course. Your operator is a **LaTeX-competent physicist** who may have no
-experience directing AI through this pipeline — this manual, not their
-prompting skill, is what makes the workflow reliable. Read it fully before
-touching course content. When this manual tells you to stop and ask, stop and
-ask.
+course. Your operator — the course's author and instructor — is a
+**LaTeX-competent physicist** who may have no experience directing AI
+through this pipeline; this manual, not their prompting skill, is what
+makes the workflow reliable. Read it fully before touching course content.
+When this manual tells you to stop and ask, stop and ask.
 
 > This manual is operational. Companion references: `docs/authoring.md` (the
-> content subset and its reasons), `docs/troubleshooting.md` (what each gate
-> means when it fires), `WORKFLOW.md` (the human-side view of this same
+> content subset and its reasons), `docs/troubleshooting.md` (what each check
+> means when it fails), `WORKFLOW.md` (the human-side view of this same
 > process).
+
+> **If you are working on the kit itself** — not on a course built from it —
+> this manual describes the product you are changing, not your job: the
+> stage workflow and the ledger duty apply to courses, and the kit's own
+> record is the release notes in `CHANGELOG.md` plus git history. Two rules
+> bind kit changes. The template is self-contained: nothing in it refers to
+> a file, lecture, or fixture that is not in the repository. And the
+> human-facing documents (`README.md`, `WORKFLOW.md`, `docs/setup.md`) are
+> written for a LaTeX-competent physicist with no programming or AI
+> experience required — plain words, no build-engineering vocabulary. A
+> change to the workflow updates `AGENTS.md`, `WORKFLOW.md`, and `README.md`
+> together: they tell one story in three voices.
 
 ## The contract
 
@@ -33,7 +45,7 @@ ask.
    it.
 4. **Every figure is born with alt text.** When you create or transcribe a
    figure, you write its description into the `alt/` sidecar in the same
-   session, and the operator approves it at the batch gate. `[ALT MISSING]`
+   session, and the operator approves it at the S4 sign-off. `[ALT MISSING]`
    is a build error.
 5. **Flagging discipline.** Adopt low-confidence-but-mathematically-correct
    readings of the source and proceed. Reserve flags for content that looks
@@ -62,13 +74,17 @@ content/lectureNN.tex → drivers/web.tex    → LaTeXML+BookML → HTML (primar
                       → drivers/slides.tex → beamer → PDF        (optional)
 ```
 
-Both targets are built by `./course.py`, which runs the validation gates on
+Both targets are built by `./course.py`, which runs the validation checks on
 every web build (`build NN`); `slides NN` is the beamer target and doubles as
-the dual-target regression gate — it must stay green even if the course never
-uses decks. `doctor` audits the toolchain; `docs/troubleshooting.md` maps
-every gate failure to its meaning and fix.
+the two-way check — it must stay green even if the course never uses decks,
+because it proves nothing target-specific has crept into the single source.
+Whether the course lectures from decks at all is declared once, in
+`shared/course.tex` (`\coursedecks`, `no` by default): it decides whether S5
+exists for this course and whether `slides NN` also enforces slide fit.
+`doctor` audits the toolchain; `docs/troubleshooting.md` maps every check
+failure to its meaning and fix.
 
-## The transcription workflow (S0 → S5, in batches of 3–5 lectures)
+## The transcription workflow (S0 → S4, then S5 only for deck courses; batches of 3–5 lectures)
 
 Work in batches of three to five lectures; each stage completes for the whole
 batch before the next begins, and the operator reviews at every stage
@@ -129,26 +145,59 @@ manual cannot.
   source repeats one (`\usealtfrom`); interview the operator when a drawing
   is ambiguous about what it *means* (not about how it looks — geometry
   questions you resolve against the source).
-- **S4 — accessibility & polish.** Progressive reveals where they serve a
-  live audience: reveal conceptual chunks, keep closely-related material
-  together, and leave intro/recap/section-opener/Takeaways frames static.
-  Split frames that are too dense rather than shrinking them. Then the full
-  batch gate (below).
-- **S5 — deck polish (OPTIONAL, author-driven; after the batch gate).** The
-  S1–S4 output is the faithful version, and it is a complete, valid final
-  state — skipping S5 is normal. If the author wants more craft, open the
-  round by presenting the rendered PDF and flagging candidates: frames with
-  under ~4 content lines that could merge into a neighbour, derivation
-  frames that could reveal in finer steps, frames that might read better
-  with text beside the figure. Then apply ONLY what the author supplies or
-  approves. Their added connecting sentences go in verbatim — author-written
-  narration is not an invention of yours; the fidelity contract binds you,
-  not them. Because the source is single, S5 narration flows into the web
-  page too — intended: the author is revising their course, not just a deck.
-  Re-run the full gates on both targets afterwards, record every S5 edit in
-  `notes/lectureNN.md`, and when the author states the same polish
-  preference a second time, graduate it into `conventions.md` so S4 applies
-  it by default from then on.
+- **S4 — validation and sign-off.** The batch check, as a stage. For every
+  lecture in the batch, `./course.py build NN` must PASS — the web build
+  with its full check suite: no conversion-log errors, every figure's alt
+  text present and non-empty, well-formed MathML, and the automated
+  accessibility audit of every page (if the build warns that pa11y is
+  missing, the page was built but not audited: show the operator the
+  warning and the install instructions it prints — you cannot install it
+  for them — and let them choose: install and re-run, or sign off with
+  the audit recorded as skipped in the ledger row) — and `./course.py slides NN` must
+  PASS, the deck build that proves nothing target-specific has crept into
+  the single source (what each verb proves is under "Validation checks"
+  below). Fix the cause of anything that fails, never the check. Then the
+  fidelity review: re-read the transcription against the source on both
+  contract axes — prose kept where the source has prose, every derivation
+  step-for-step complete. Then the operator signs off — content and alt
+  text, with your fidelity self-review in front of them — and the batch
+  gets its `CHANGELOG.md` row (what landed, what was decided, what was
+  flagged) and the close-out below. A batch without its ledger row is not
+  done. A signed S4 batch is the finished lecture: nothing after this stage
+  is required.
+- **S5 — deck (ONLY when the operator has set `\coursedecks` to `yes` in
+  `shared/course.tex`; skipped otherwise).** Overlays are slide polish that
+  the web flattens (`docs/authoring.md`), so they are authored here — after
+  sign-off, never during transcription. A course that does not lecture from
+  slides never enters this stage and never fits frames to slides: it may be
+  transcribing narrative notes purely for an accessible web version. Two
+  halves, in order:
+  1. *Reveals and fit, by the standing rules.* Progressive reveals where
+     they serve a live audience: reveal conceptual chunks, keep closely
+     related material together, and leave intro, recap, section-opener,
+     and Takeaways frames static. A frame that overflows the slide is split
+     at a conceptual beat, never shrunk (`slides NN` fails a deck course on
+     any overfull box). Prefer `\pause` and open ranges; a closed `\only`
+     range is the one construct that removes content from the web page and
+     is reserved for the partial state of a staged figure (`conventions.md`,
+     Deck section).
+  2. *Author polish, on request.* Present the rendered PDF and flag
+     candidates: frames with under ~4 content lines that could merge into a
+     neighbour, derivation frames that could reveal in finer steps, frames
+     that might read better with text beside the figure. Then apply ONLY
+     what the operator supplies or approves. Their added connecting
+     sentences go in verbatim — author-written narration is not an
+     invention of yours; the fidelity contract binds you, not them. Because
+     the source is single, that narration flows into the web page too —
+     intended: they are revising their course, not just a deck.
+  Afterwards re-run both builds. S5 changes the web page in two ways
+  only: the operator's own narration, and the extra section heading each
+  frame split adds (the web flattens the reveals themselves) — keep the
+  S4 copy of `build/web/html/lectureNN/` aside and diff it after S5 to
+  show that nothing else moved. Record every S5 edit in
+  `notes/lectureNN.md`, and when the operator states the same polish
+  preference a second time, graduate it into `conventions.md` (Deck
+  section) so half 1 applies it by default from then on.
 
 ## Interview protocol — when you must stop and ask
 
@@ -158,7 +207,7 @@ Ask at these moments, and batch your questions:
 - Any notation or convention decision that will bind later lectures — record
   the answer in `conventions.md`.
 - Figure intent that the source drawing leaves undecidable.
-- Alt-text approval and batch sign-off at each gate.
+- Alt-text approval and batch sign-off at S4.
 - Anything the flagging discipline (contract #5) escalates.
 
 Bring every escalation **with a recommended resolution** — your proposed
@@ -169,21 +218,24 @@ Do not ask about: choices the conventions file already settles, cosmetic
 matters you can decide and note in the ledger, or low-confidence readings
 that are mathematically sound (proceed, per contract #5).
 
-## Validation gates (every batch, both targets)
+## Validation checks (what each verb proves)
 
-Per lecture: `./course.py build NN` must PASS — it runs the whole suite
-(latexml errors, `[ALT MISSING]`, empty figure `alt`, the malformed-MathML
-counter, per-page accessibility audit) — and `./course.py slides NN` must
-PASS: it builds the deck and fails on any overfull box beyond sub-line
-tolerance (>2pt), so a green run means the deck *fits*, not merely that it
-compiled. When a gate fires, `docs/troubleshooting.md` has the symptom → fix
-table; fix the cause, never suppress the check.
-
-The batch gate adds the **fidelity review**: re-read the transcription
-against the source on both contract axes — prose kept where the source has
-prose; every derivation step-for-step complete. Then the operator signs off,
-and the batch gets its `CHANGELOG.md` row (what landed, what was decided,
-what was flagged). A batch without its ledger row is not done.
+`./course.py build NN` PASS: the web page built and every check on it is
+clean — no latexml errors, no `[ALT MISSING]` and no empty figure `alt`,
+the malformed-MathML counter at zero, no overlay spec leaked onto the page
+as text, and the automated accessibility
+audit (axe, via pa11y) passing on every page, or — when pa11y is not
+installed — the build's warning that the audit was skipped, which the
+operator sees before sign-off. `./course.py slides NN`
+PASS: the deck built, which proves nothing target-specific has crept into
+the single source; for a deck course (`\coursedecks` yes) it also fails on
+any overfull box beyond sub-line tolerance (>2pt), so a green run means the
+deck *fits*, not merely that it compiled — with `\coursedecks` at `no` the
+box report is printed as information and the verb passes: overfull frames
+on a web-only course need no action and no escalation; note them in the
+lecture's notes for the day the course turns slides on. When a check
+fails, `docs/troubleshooting.md` has the symptom → fix table; fix the
+cause, never suppress the check.
 
 **Close-out, after sign-off:** condense each lecture's `notes/lectureNN.md`
 to its durable record — final frame and figure inventory, lecture-local

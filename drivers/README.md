@@ -1,1 +1,1 @@
-The two thin build wrappers: web.tex (LaTeXML+BookML, primary) and slides.tex (beamer, optional + regression gate).
+The two thin build files: web.tex (LaTeXML+BookML, the primary output) and slides.tex (beamer; optional, and always built as a check that a lecture still works both ways).

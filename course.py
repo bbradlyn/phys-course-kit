@@ -3,11 +3,13 @@
 
 Verbs:
   build NN | --all [--keep-announcements] [--no-pa11y | --strict]
-      Web target (PRIMARY): generate the root wrapper, run the BookML build,
+      Web target (PRIMARY): generate the root build file, run the BookML build,
       then the full check suite on the result.
   slides NN | --all
       Beamer PDF into build/slides/ (announcements sidecars always included —
-      that is their point).  Also the dual-target regression gate.
+      that is their point).  Also the check that the single source still
+      builds both ways; when shared/course.tex sets \\coursedecks to yes it
+      additionally fails on any overfull frame (slide fit).
   check NN | --all [--no-pa11y | --strict]
       Check suite only, on existing web builds.
   figure NN name
@@ -17,15 +19,16 @@ Verbs:
       Generate the site index (build/web/html/index.html) from the lecture
       titles scraped out of content/ — no separate manifest to maintain.
   doctor
-      Toolchain sanity report.
+      Report on the software the kit needs and on the course as configured.
   clean [--deep]
       Remove build outputs and generated wrappers; --deep also drops the
       bmlimages figure cache (forces re-rendering).
 
 Lecture names are forgiving: 5, 05, lecture05 all work.
 
-Toolchain stance: a full TeX Live plus latexml on PATH is all that is
-expected — no pinning (verified: the kit runs on stock TeX Live 2026).
+Software: a full TeX Live plus latexml, both runnable from your terminal, is
+all that is expected — no particular TeX version (verified: the kit runs on
+stock TeX Live 2026).
 Set KIT_TEXBIN to prepend a specific TeX bin directory if you need one.
 """
 
@@ -101,6 +104,12 @@ def course_meta():
     return meta
 
 
+def course_decks():
+    """True only when shared/course.tex sets \\coursedecks to yes: the course
+    lectures from slides, so slide fit is enforced and S5 exists."""
+    return course_meta().get("coursedecks", "no").strip().lower() == "yes"
+
+
 def lectures():
     return sorted(p.stem[len("lecture"):]
                   for p in CONTENT.glob("lecture[0-9][0-9].tex"))
@@ -119,7 +128,7 @@ def norm_lecture(arg):
 def lecture_title(nn):
     text = (CONTENT / f"lecture{nn}.tex").read_text(encoding="utf-8")
     m = re.search(r"\\kitlecturetitle\{((?:[^{}]|\{[^{}]*\})*)\}", text)
-    return m.group(1).strip() if m else f"Lecture {int(nn)}"
+    return " ".join(m.group(1).split()) if m else f"Lecture {int(nn)}"  # a title wrapped over lines stays one line
 
 
 # ---------------------------------------------------------------------------
@@ -143,7 +152,7 @@ def write_wrapper(nn, keep_announcements=False):
 
 def build_web(nn, keep_announcements=False):
     if not BOOKML.is_dir():
-        sys.exit("bookml/ is missing -- run the setup script (docs/setup.md)")
+        sys.exit("bookml/ is missing -- run ./setup.sh to fetch it (docs/setup.md)")
     write_wrapper(nn, keep_announcements)
     target = f"{WEB_AUX.relative_to(ROOT)}/html/lecture{nn}/index.html"
     print(f"  bookml: make {target}")
@@ -217,9 +226,12 @@ def build_slides(nn):
     if bad:
         for line in bad[:10]:
             print(f"    {line}")
-        print(f"SLIDES FAILED (overfull > {OVERFULL_TOLERANCE_PT:g}pt -- "
-              f"content may be clipped; log retained: build/slides/{job}.log)")
-        return False
+        if course_decks():
+            print(f"SLIDES FAILED (overfull > {OVERFULL_TOLERANCE_PT:g}pt -- "
+                  f"content may be clipped; log retained: build/slides/{job}.log)")
+            return False
+        print(f"  boxes: {len(bad)} overfull > {OVERFULL_TOLERANCE_PT:g}pt -- "
+              "reported, not enforced (\\coursedecks is not yes: web-only course)")
     run(["latexmk", "-c", f"-jobname={job}",
          f"-output-directory={SLIDES.relative_to(ROOT)}", "drivers/slides.tex"])
     for ext in (".nav", ".snm", ".vrb"):  # beamer extras latexmk -c leaves
@@ -316,6 +328,17 @@ def bare_math_text(html_text):
     return s.bare
 
 
+# An overlay spec that reached the page as text: LaTeXML prints a text-mode
+# "<2->" as "¡2-¿" (the OT1 glyphs), or escapes it literally.  Either means a
+# construct's overlay argument was not stripped on the web -- a kit shim bug,
+# never a content problem to paper over.
+OVERLAY_LEAK_RE = re.compile(r"¡\d+(?:-\d*)?¿|&lt;\d+(?:-\d*)?&gt;")
+
+
+def overlay_leaks(html_text):
+    return OVERLAY_LEAK_RE.findall(html_text)
+
+
 def libgs_available():
     rc, out = run(["dvisvgm", "-V1"], timeout=60)
     return rc == 0 and "Ghostscript" in out
@@ -328,7 +351,7 @@ def pa11y_page(path, strict, skip):
     if not exe:
         if strict:
             return False, "pa11y NOT INSTALLED (required by --strict)"
-        return True, "pa11y not installed -- skipping (npm install -g pa11y)"
+        return True, "not installed -- audit skipped; install Node.js, then `npm install -g pa11y`"
     rc, out = run([exe, "--runner", "axe", "--hide-elements", "math",
                    path.resolve().as_uri()], env=pa11y_env(), timeout=300)
     if rc == 0:
@@ -338,12 +361,24 @@ def pa11y_page(path, strict, skip):
     return (not strict), f"TECHNICAL FAILURE (exit {rc}) -- browser/launch problem, not an audit result"
 
 
+PA11Y_MISSING_WARNING = """\
+  pa11y: WARNING -- pa11y is not installed, so the accessibility audit was SKIPPED:
+         the page was built and checked otherwise, but it has NOT been audited.
+         To install: get Node.js (https://nodejs.org), then run `npm install -g pa11y`
+         (./setup.sh offers this), or ask whoever administers this machine; then
+         `./course.py check NN` re-runs the checks without rebuilding."""
+
+
 def check_lecture(nn, strict=False, no_pa11y=False):
+    """Returns (ok, audited): ok is the verdict; audited is False when the
+    accessibility audit could not run because pa11y is missing (a warning,
+    not a failure, unless --strict)."""
     page_dir = SITE / f"lecture{nn}"
     ok = True
+    audited = True
     if not (page_dir / "index.html").exists():
         print(f"  MISSING: {page_dir}/index.html (build it first)")
-        return False
+        return False, False
 
     # latexml log: errors, with the known libgs/depth class told apart
     log = WEB_AUX / "latexmlaux" / f"lecture{nn}.latexml.log"
@@ -385,21 +420,34 @@ def check_lecture(nn, strict=False, no_pa11y=False):
         if bare:
             print(f"  {page.name}: bare-math-text {len(bare)} -- {bare[:3]}")
             ok = False
+        leaks = overlay_leaks(html_text)
+        if leaks:
+            print(f"  {page.name}: overlay-leak {len(leaks)} -- an overlay spec printed as text: {sorted(set(leaks))[:3]}")
+            ok = False
         n_math += html_text.count("<math")
         n_unparsed += html_text.count("ltx_math_unparsed")
 
-    print(f"  checks: <math> {n_math} | unparsed {n_unparsed} | figures {n_imgs} | bare-math-text 0"
+    print(f"  checks: <math> {n_math} | unparsed {n_unparsed} | figures {n_imgs} | bare-math-text 0 | overlay-leak 0"
           if ok else f"  checks: <math> {n_math} | unparsed {n_unparsed} | figures {n_imgs}")
 
-    # pa11y, every page
-    for page in sorted(page_dir.glob("*.html")):
-        good, msg = pa11y_page(page, strict, no_pa11y)
-        if not good:
-            print(f"  pa11y {page.name}: {msg}")
+    # pa11y, every page -- a missing pa11y warns and is reported on the PASS
+    # line; it fails the check only under --strict
+    if not no_pa11y and not shutil.which("pa11y"):
+        if strict:
+            print("  pa11y: NOT INSTALLED -- required by --strict")
             ok = False
-    if not no_pa11y:
-        print("  pa11y: clean" if ok else "  pa11y: see above")
-    return ok
+        else:
+            print(PA11Y_MISSING_WARNING)
+            audited = False
+    else:
+        for page in sorted(page_dir.glob("*.html")):
+            good, msg = pa11y_page(page, strict, no_pa11y)
+            if not good:
+                print(f"  pa11y {page.name}: {msg}")
+                ok = False
+        if not no_pa11y:
+            print("  pa11y: clean" if ok else "  pa11y: see above")
+    return ok, audited
 
 
 # ---------------------------------------------------------------------------
@@ -468,7 +516,7 @@ def doctor():
         print(f"  ok: {name} -- {ver[:70]}" + (f" ({note})" if note else ""))
         return out
 
-    print("toolchain (stock PATH is the expectation; KIT_TEXBIN overrides):")
+    print("software the kit needs (expected on your PATH; KIT_TEXBIN adds a TeX directory first):")
     probe("make", ["make", "--version"])
     probe("latexmk", ["latexmk", "--version"])
     probe("pdflatex", ["pdflatex", "--version"])
@@ -490,18 +538,22 @@ def doctor():
     if BOOKML.is_dir():
         print(f"  ok: bookml/ present")
     else:
-        print("  MISSING: bookml/ -- fetch the pinned release (docs/setup.md)")
+        print("  MISSING: bookml/ -- run ./setup.sh to fetch the fixed release (docs/setup.md)")
         ok = False
     if shutil.which("pa11y"):
         env = pa11y_env()
         browser = env.get("PUPPETEER_EXECUTABLE_PATH", "(puppeteer default)")
         print(f"  ok: pa11y -- browser: {browser}")
     else:
-        print("  absent : pa11y (accessibility audits skipped; npm install -g pa11y)")
+        print("  absent : pa11y -- the accessibility audit will be skipped with a warning; "
+              "install Node.js, then `npm install -g pa11y` (./setup.sh offers this)")
 
     meta = course_meta()
     print(f"course: {meta.get('coursecode', '?')} — {meta.get('coursetitle', '?')} "
           f"({meta.get('courseterm', '?')})")
+    print("slides: " + ("lectured from (\\coursedecks yes) -- slides NN enforces slide fit"
+                        if course_decks() else
+                        "check only (\\coursedecks no) -- overfull frames reported, not enforced"))
     lex = lectures()
     print(f"content: {len(lex)} lecture(s): {', '.join(lex)}")
     for nn in lex:
@@ -538,10 +590,11 @@ def main():
     ap.add_argument("lecture", nargs="?", help="NN / lectureNN (or --all)")
     ap.add_argument("name", nargs="?",
                     help="figure verb only: the figure basename (no .tex)")
-    ap.add_argument("--all", action="store_true")
-    ap.add_argument("--keep-announcements", action="store_true")
+    ap.add_argument("--all", action="store_true", help="every lecture in content/")
+    ap.add_argument("--keep-announcements", action="store_true",
+                    help="build: include the announcements sidecar in the web page (one-off)")
     ap.add_argument("--strict", action="store_true", help="missing pa11y is an error")
-    ap.add_argument("--no-pa11y", action="store_true")
+    ap.add_argument("--no-pa11y", action="store_true", help="skip the accessibility audit deliberately (the build says so)")
     ap.add_argument("--deep", action="store_true", help="clean: also drop the figure cache")
     args = ap.parse_args()
 
@@ -565,15 +618,15 @@ def main():
         print(f"== lecture{nn} ==")
         if args.verb == "slides":
             results[nn] = build_slides(nn)
-        elif args.verb == "build":
-            good = build_web(nn, args.keep_announcements)
+        elif args.verb in ("build", "check"):
+            good, audited = True, True
+            if args.verb == "build":
+                good = build_web(nn, args.keep_announcements)
             if good:
-                good = check_lecture(nn, args.strict, args.no_pa11y)
+                good, audited = check_lecture(nn, args.strict, args.no_pa11y)
             results[nn] = good
-            print(("PASS" if good else "FAIL") + f" lecture{nn}")
-        elif args.verb == "check":
-            results[nn] = check_lecture(nn, args.strict, args.no_pa11y)
-            print(("PASS" if results[nn] else "FAIL") + f" lecture{nn}")
+            print(("PASS" if good else "FAIL") + f" lecture{nn}"
+                  + ("" if audited else " (accessibility audit SKIPPED: pa11y not installed -- see the warning above)"))
     if args.verb == "build" and args.all:
         build_index(args.strict, args.no_pa11y)
     n_ok = sum(results.values())

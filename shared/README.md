@@ -1,1 +1,1 @@
-Course macros (macros.tex), the two preambles, and the site stylesheet.
+Course identity (course.tex — the one file a course edits), the palette, the two preambles, math macros (macros.tex), the alt-text bridge (kitalt.sty and its LaTeXML binding), the overlay bridge (kitoverlay.sty and its binding, which strips \item<...> specs on the web), and the site stylesheet (kit.css).

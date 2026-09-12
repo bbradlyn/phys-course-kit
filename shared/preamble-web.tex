@@ -38,6 +38,10 @@
 % Alt-text bridge: \kitfigdesc attaches a figure description to the generated
 % image on the web target (LaTeXML binding); no-op under pdflatex.
 \usepackage{shared/kitalt}
+% Overlay bridge: LaTeXML re-lets \item at every list start, past the \item
+% wrapper below, so \item<2-> specs are stripped on the LaTeXML side
+% (shared/kitoverlay.sty.ltxml); no-op under pdflatex.
+\usepackage{shared/kitoverlay}
 
 % --- Lecture title metadata --------------------------------------------------
 \newcommand{\kitlecturetitle}[1]{%

@@ -1,0 +1,55 @@
+# -*- mode: Perl -*-
+# Kit overlay bridge -- LaTeXML side.
+# LaTeXML re-lets \item to \itemize@item, \enumerate@item or \description@item
+# at every list start (LaTeX.pool, beginItemize), past any TeX-level wrapper;
+# so an \item<2-> overlay spec reached the page as literal text ("¡2-¿").  These
+# three macros read and discard an optional <...> before the pool's own item
+# constructors run; the web shows the final state.  Reader idiom borrowed from
+# LaTeXML's beamer binding.  course.py's overlay-leak check fails a build on
+# any spec that still gets through.
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+sub readKitOverlay {
+  my ($gullet) = @_;
+  # Peek WITHOUT expanding: an expanding read would expand a following \item
+  # (the first item of a list) while looking for '<', and eat its tag.
+  $gullet->skipSpaces;
+  my $tok = $gullet->readToken;
+  if (ref $tok && ToString($tok) eq '<') {
+    $gullet->readUntil(T_OTHER('>')); }
+  else {
+    $gullet->unread($tok) if ref $tok;
+    undef; } }
+DefParameterType('KitOverlay', \&readKitOverlay, optional => 1);
+
+DefMacro('\itemize@item KitOverlay',     '\preitem@par\itemize@item@');
+DefMacro('\enumerate@item KitOverlay',   '\preitem@par\enumerate@item@');
+DefMacro('\description@item KitOverlay', '\preitem@par\description@item@');
+
+
+# Environment-level specs -- \begin{itemize}<2-> and \begin{itemize}[<+->] --:
+# the pool's list environments are locked against \renewenvironment, so the
+# preamble's \begin{...} stripper never runs under LaTeXML.  Re-defined here
+# with the pool's own bodies and properties, plus two arguments that are read
+# and discarded.
+DefEnvironment('{itemize} KitOverlay []',
+  "<ltx:itemize xml:id='#id'>#body</ltx:itemize>",
+  properties      => sub { beginItemize('itemize', '@item'); },
+  beforeDigestEnd => sub { Digest('\par'); },
+  locked          => 1, mode => 'text');
+DefEnvironment('{enumerate} KitOverlay []',
+  "<ltx:enumerate xml:id='#id'>#body</ltx:enumerate>",
+  properties      => sub { beginItemize('enumerate', 'enum'); },
+  beforeDigestEnd => sub { Digest('\par'); },
+  locked          => 1, mode => 'text');
+DefEnvironment('{description} KitOverlay []',
+  "<ltx:description  xml:id='#id'>#body</ltx:description>",
+  beforeDigest    => sub { Let('\makelabel', '\descriptionlabel'); },
+  properties      => sub { beginItemize('description', '@desc'); },
+  beforeDigestEnd => sub { Digest('\par'); },
+  locked          => 1, mode => 'text');
+
+1;

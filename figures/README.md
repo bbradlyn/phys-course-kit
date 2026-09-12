@@ -1,1 +1,1 @@
-TikZ figure sources, shared namespace across lectures. Every figure is born with alt text (see alt/).
+TikZ figure sources, one directory per owning lecture (figures/lectureNN/); a later lecture reuses a figure by its original path (see \usealtfrom in docs/authoring.md). Every figure is born with alt text (see alt/).

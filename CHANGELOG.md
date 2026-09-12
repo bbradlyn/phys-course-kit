@@ -6,7 +6,9 @@ This file has two jobs.
 fixes, newest first, below the rule.
 
 **In a course built from the template** it becomes the course's ledger.
-Delete the release notes and start your own table in their place:
+Start your own table here, above the rule; the kit's release notes below it
+can stay for reference or go whenever you are ready — deleting them is your
+call, not the assistant's:
 
 ```markdown
 | Date | Decision / Update |
@@ -20,6 +22,74 @@ without its ledger row is not done. Durable conventions distilled from the
 log live in `conventions.md`.
 
 ---
+
+## 2026-09-12 — Slides become opt-in; documentation pass before going public
+
+### Changed
+
+- **S4 is checks and sign-off; S5 is the slides stage, and only for courses
+  that lecture from slides.** Progressive reveals, splitting frames to fit a
+  slide, and the author polish round now live together in one stage that a
+  web-only course never enters — such a course may be transcribing
+  narrative notes purely for an accessible web version, and it no longer
+  has to fit anything onto a slide. Overlays were already documented as
+  optional slide polish that the web flattens; the workflow still authored
+  them in the required path, a leftover from the deck-first course the kit
+  was distilled from. A signed-off S4 batch is the finished lecture, and S4
+  keeps every web check, the automated accessibility audit included.
+- **`\coursedecks` in `shared/course.tex`** says whether the course lectures
+  from slides (`no` unless you say otherwise). `./course.py slides NN`
+  always builds the slide version — it is the check that one source still
+  works both ways — and always prints the overfull-frame report; it fails
+  on an overfull frame only when `\coursedecks` is `yes`. `doctor` reports
+  the setting.
+- The human-facing documents (`README.md`, `WORKFLOW.md`, `docs/setup.md`)
+  are written for a LaTeX-competent physicist with no programming or AI
+  experience required: build-engineering vocabulary ("gate", "regression",
+  "CI", "toolchain") replaced with plain words, and the reference shelf
+  (`docs/`) lightened the same way. `AGENTS.md` opens with a note for an
+  assistant working on the kit itself rather than on a course, carrying
+  the two standing rules: the template is self-contained, and the human
+  documents stay in plain words.
+
+### Fixed
+
+- The README's provenance section no longer narrates the development
+  history (page counts, individual bugs, kickoff phrases); the release
+  notes and git history carry that.
+- The changelog header no longer tells a course to delete the kit's
+  release notes as its first step: the ledger starts above them, and the
+  deletion is the owner's, whenever they are ready.
+- **`\item<n->` leaked its overlay spec onto the web page as text**
+  (`¡2-¿`) in every list — the kit's own sample lecture included — because
+  LaTeXML rebinds `\item` when a list begins, past the kit's wrapper. A
+  LaTeXML binding (`shared/kitoverlay.sty.ltxml`) now strips the spec where
+  the rebinding happens, and a new check
+  (`overlay-leak`) fails any build that prints an overlay spec; it was shown
+  to fail on the old output before the fix. Found by an assistant reading
+  its own page in a trial run.
+- Boxed equations keep their box. The conventions seed told the assistant
+  to render every board box as `\alert` emphasis, which dropped the box
+  from boxed equations; it now distinguishes a boxed equation
+  (`\boxed{...}`, which renders on both targets) from boxed prose
+  (`\alert`). Found when the author read a trial run's first page.
+- A missing pa11y no longer passes silently. `build` and `check` printed
+  `pa11y: clean` when pa11y was not installed and the audit had not run at
+  all; they now print a warning with install instructions, still produce
+  and check the page, and say on the `PASS` line that the audit was
+  skipped (`--strict` still makes it a failure, for automated runs). The
+  audit needs Node.js, which not every machine — or assistant — can
+  install, so the page is never held hostage to it.
+- `docs/authoring.md` still carried the pre-2026-08-08 one-edit
+  macro-promotion advice; it now states the two-edit rule, matching
+  `shared/macros.tex` and the troubleshooting table.
+- The template is self-contained again: a comment in `shared/macros.tex`
+  and two example conventions referred to lectures and macros that the
+  template does not ship.
+- Stale or inconsistent references: the stage count in `WORKFLOW.md`; the
+  `shared/`, `figures/`, and `drivers/` directory READMEs; `--strict` and
+  `--no-pa11y` documented only in `--help`; `\alt` missing from the
+  construct table; `setup.sh` missing from the layout table.
 
 ## 2026-08-08 — Revalidation fixes and hardening
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # ===========================================================================
-# Day-0 toolchain setup for phys-course-kit (macOS / Linux).
+# Day-0 software setup for phys-course-kit (macOS / Linux).
 #
-# Idempotent: checks first, asks before installing anything, and finishes by
+# Safe to re-run: checks first, asks before installing anything, and finishes by
 # running `./course.py doctor` so you see the audited end state.
 #   --yes      answer yes to every install prompt
 #   --dry-run  report what would be done, change nothing
@@ -101,7 +101,7 @@ else
   fi
 fi
 
-say "== BookML (pinned ${BOOKML_VERSION}) =="
+say "== BookML (fixed at ${BOOKML_VERSION}) =="
 if grep -qs "\$bmlVersion = '${BOOKML_VERSION}'" bookml/bookml.sty.ltxml; then
   say "  ok: bookml/ already at ${BOOKML_VERSION}"
 else

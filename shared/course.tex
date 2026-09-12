@@ -1,9 +1,15 @@
 % ===========================================================================
 % Course identity — THE ONE FILE you edit when instantiating this template.
-% Both drivers and course.py read these values (course.py by regex, so keep
+% Both drivers and course.py read these values (course.py by a simple text
+% pattern, so keep
 % the simple \newcommand{\name}{value} form, one per line).
 % ===========================================================================
 \newcommand{\coursecode}{PHYS 599}
 \newcommand{\coursetitle}{Your Course Title Here}
 \newcommand{\courseterm}{Fall 20XX}
 \newcommand{\courseurl}{https://courses.example.edu/phys599}
+% Do you lecture from slide decks?  no (default): the web page is the only
+% output you use; slides are still built as a check, and any overfull frame is
+% reported, never enforced.  yes: the slides stage (S5) is part of the workflow
+% and `course.py slides` fails on any frame that overflows its slide.
+\newcommand{\coursedecks}{no}

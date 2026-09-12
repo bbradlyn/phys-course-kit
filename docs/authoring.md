@@ -1,12 +1,13 @@
-# Authoring guide — the content subset, with reasons
+# Authoring guide — what goes in a lecture file, and why
 
 Reference for whoever writes lecture content — normally the AI assistant
 during transcription, and you whenever you author or edit by hand. "You"
 below means the author of the moment; the rules bind both of you equally.
 
-Each lecture is exactly one file: `content/lectureNN.tex`, in a subset of
-LaTeX that both drivers accept. `content/lecture00.tex` is the living
-reference — copy its shape. Rules below carry their reasons.
+Each lecture is exactly one file: `content/lectureNN.tex`, written in the
+LaTeX that both the web build and the slide build understand.
+`content/lecture00.tex` is the living reference — copy its shape. Rules
+below carry their reasons.
 
 ## Anatomy of a lecture file
 
@@ -30,7 +31,7 @@ reference — copy its shape. Rules below carry their reasons.
 \begin{frame}{Takeaways} ... \end{frame}
 ```
 
-## The construct palette
+## What you can use in a lecture file
 
 | Construct | Slides render | Web renders |
 |---|---|---|
@@ -41,7 +42,9 @@ reference — copy its shape. Rules below carry their reasons.
 | `itemize` / `enumerate` / `description` | native (overlay specs honored) | native (specs stripped) |
 | `\item<2->`, `\onslide<2->{...}`, `\uncover`, `\visible`, `\pause` | progressive reveal | final state |
 | `\only<spec>{...}` | shown only on those overlays | **kept iff the range is open** (`<2->`); closed ranges (`<1>`, `<1-2>`) are staging and are dropped |
-| `\alert{...}` | orange emphasis | bold + orange |
+| `\alt<spec>{on}{off}` | *on* text during `spec`, *off* text otherwise | the *on* text, always |
+| `\alert{...}` | orange emphasis (text; an inline formula inside needs its own `$…$`) | bold + orange |
+| `\boxed{...}` (inside math) | framed formula | framed formula (a MathML box) |
 | `\case{N}` | circled glyph ① | `(N)` |
 | `\fig{path}{alt-key}` | centered figure | dvisvgm SVG `<img>` with the sidecar text as `alt` |
 | `\figw{width}{path}{alt-key}` | `\fig` capped to `width` (scales text too, unlike TikZ `scale=`) | same as `\fig` (images flow at page width) |
@@ -93,15 +96,21 @@ show). If in doubt, use `\onslide`.
 |---|---|
 | xparse (`\NewDocumentCommand`) or expl3 in content or local macros | the web engine cannot parse them; the kit preambles are classic TeX by construction |
 | raw `\textcircled{...}` | the web engine mangles decorated arguments; use `\case{N}` |
-| target-specific branches (`\ifdefined\HCode`-style hacks) | single source is the architecture; if a construct only works on one target, raise it as a conventions question |
+| version-specific branches (`\ifdefined\HCode`-style hacks) | one source feeding both outputs is the whole design; if a construct only works in one of them, raise it as a conventions question |
 | announcements/dates in lecture bodies | they belong in `announcements/lectureNN.tex`; the archive stays timeless |
 | splitting `\Big`-family fences across rows | the MathML corruption above |
 
 ## Course macros
 
-Math macros live in `shared/macros.tex` (target-neutral semantics only).
-A macro used by a single lecture may start as a `\newcommand` at the top of
-that content file; promote it to `shared/macros.tex` (as `\providecommand`,
-so existing lectures keep compiling) the first time a second lecture wants
-it, and record the promotion in `CHANGELOG.md`. Notation decisions that bind
-later lectures go in `conventions.md` when they're made.
+Math macros live in `shared/macros.tex` (only macros that mean the same
+thing in both outputs). A macro used by a single lecture may start as a
+`\newcommand` at the top of that content file. Promote it to
+`shared/macros.tex` the first time a second lecture wants it — and
+promotion is **two edits**: add it there as `\providecommand`, *and* delete
+the local definition from the lecture that had it. The shared file loads
+before every lecture body, so a surviving local `\newcommand` collides
+(`Command \foo already defined` — the troubleshooting table has the row);
+`\providecommand` in the shared file does not protect it. Re-run that
+lecture's `build` and `slides` afterwards, and record the promotion in
+`CHANGELOG.md`. Notation decisions that bind later lectures go in
+`conventions.md` when they're made.
