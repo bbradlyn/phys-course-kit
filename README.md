@@ -136,3 +136,7 @@ their results have matched the validated versions; what those runs
 taught is folded into the manual, the conventions, and the checks.
 Release notes: `CHANGELOG.md`; the full development record is in this
 repository's git history.
+
+## Acknowledgments
+
+Development of these tools was supported by the National Science Foundation under grant no. DMR-2510219
