@@ -88,7 +88,9 @@ repository's folder, which is where every command below is typed.
 
 A standard TeX Live plus LaTeXML, installed so that both run in your
 terminal, is all that's expected — no particular TeX version to chase, no
-version juggling.
+version juggling. On Windows, where `setup.sh` does not run,
+[`docs/setup.md`](docs/setup.md) has the same steps by hand, and the driver
+is typed as `python course.py` wherever these pages say `./course.py`.
 
 ## Layout
 

@@ -30,6 +30,10 @@ Software: a full TeX Live plus latexml, both runnable from your terminal, is
 all that is expected — no particular TeX version (verified: the kit runs on
 stock TeX Live 2026).
 Set KIT_TEXBIN to prepend a specific TeX bin directory if you need one.
+On Windows, which has no system Perl, LaTeXML lives in Strawberry Perl
+(C:\\Strawberry, or KIT_STRAWBERRY): its directories go first on PATH for
+every build command and its gmake stands in for make; run the driver as
+`python course.py ...` (docs/setup.md has the install recipe).
 """
 
 import argparse
@@ -37,10 +41,21 @@ import glob
 import os
 import re
 import shutil
+import stat
 import subprocess
 import sys
 from html.parser import HTMLParser
 from pathlib import Path
+
+# Console output goes through UTF-8 whatever the console's code page (a pa11y
+# or LaTeXML message carrying a math glyph would otherwise crash a redirected
+# stdout under Windows' cp1252 mid-batch) and is line-buffered, so a
+# redirected `build --all` log shows progress; harmless on a UTF-8 terminal.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace", line_buffering=True)
+    except (AttributeError, ValueError):
+        pass
 
 ROOT = Path(__file__).resolve().parent
 CONTENT = ROOT / "content"
@@ -55,14 +70,35 @@ BOOKML = ROOT / "bookml"
 # environment
 # ---------------------------------------------------------------------------
 
+def strawberry_root(env):
+    """Windows only: Strawberry Perl's folder (KIT_STRAWBERRY, else
+    C:\\Strawberry), where LaTeXML and gmake live; None when absent."""
+    for cand in (env.get("KIT_STRAWBERRY"), r"C:\Strawberry"):
+        if cand and (Path(cand) / "perl" / "bin" / "perl.exe").is_file():
+            return Path(cand)
+    return None
+
+
 def base_env():
     env = os.environ.copy()
+    pre = []
     texbin = env.get("KIT_TEXBIN")
     if texbin:
-        env["PATH"] = texbin + os.pathsep + env["PATH"]
+        pre.append(texbin)
+    if sys.platform == "win32":
+        # Windows has no system Perl: latexml.bat, the Perl with XML::LibXML
+        # and gmake all live in Strawberry Perl, whose directories are not
+        # always on PATH (and Git Bash's own perl shadows them when they are).
+        sb = strawberry_root(env)
+        if sb:
+            pre += [str(sb / "perl" / "site" / "bin"), str(sb / "perl" / "bin"),
+                    str(sb / "c" / "bin")]
+    if pre:
+        env["PATH"] = os.pathsep.join(pre + [env.get("PATH", "")])
     # dvisvgm needs the Ghostscript LIBRARY to read preview baseline specials
     # (BookML image depths); point it at a Homebrew/system libgs when the
-    # environment hasn't already (a user-set LIBGS always wins).
+    # environment hasn't already (a user-set LIBGS always wins).  TeX Live's
+    # Windows dvisvgm carries its own Ghostscript.
     if sys.platform == "darwin" and not env.get("LIBGS"):
         for cand in ("/opt/homebrew/lib/libgs.dylib", "/usr/local/lib/libgs.dylib"):
             if Path(cand).exists():
@@ -71,25 +107,81 @@ def base_env():
     return env
 
 
-def pa11y_env():
-    """On macOS, point puppeteer at a system browser unless the user already
-    did (bundled-Chromium downloads are unreliable on some machines)."""
+def which(name, env=None):
+    """The program as found on the build PATH (base_env's, not the shell's)."""
+    return shutil.which(name, path=(env or base_env()).get("PATH"))
+
+
+def make_exe(env):
+    """GNU make -- or gmake / mingw32-make, the names it goes by where there
+    is no `make` (Strawberry Perl and MinGW ship it so on Windows)."""
+    for name in ("make", "gmake", "mingw32-make"):
+        exe = which(name, env)
+        if exe:
+            return exe
+    return None
+
+
+def make_cmd(make, target):
+    cmd = [make, target]
+    if sys.platform == "win32":
+        # GNU make on Windows runs its $(shell) probes through Git Bash's
+        # sh.exe whenever that is on PATH, whatever SHELL the environment
+        # says, and BookML's early `2>NUL` probes then leave a stray file
+        # named NUL in the repository.  A SHELL given on the command line
+        # applies before the makefile is read and reaches BookML's sub-make.
+        cmd.append("SHELL=cmd.exe")
+    return cmd
+
+
+MAC_BROWSERS = ("Google Chrome.app/Contents/MacOS/Google Chrome",
+                "Chromium.app/Contents/MacOS/Chromium",
+                "Microsoft Edge.app/Contents/MacOS/Microsoft Edge")
+WINDOWS_BROWSERS = (r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+                    r"C:\Program Files\Microsoft\Edge\Application\msedge.exe")
+
+
+def system_browser():
+    """An installed browser pa11y can drive: Chrome/Chromium/Edge on macOS,
+    Edge (shipped with Windows) on Windows; None elsewhere."""
+    if sys.platform == "darwin":
+        cands = [Path("/Applications") / app for app in MAC_BROWSERS]
+    elif sys.platform == "win32":
+        cands = [Path(p) for p in WINDOWS_BROWSERS]
+    else:
+        cands = []
+    for cand in cands:
+        if cand.exists():
+            return str(cand)
+    return None
+
+
+def pa11y_env(force_browser=False):
+    """pa11y drives a real browser through puppeteer.  On macOS, point it at
+    a system browser unless the user already did (bundled-Chromium downloads
+    are unreliable on some machines); on Windows the bundled browser is
+    tried first and the installed Edge only on the retry after a launch
+    failure (force_browser).  A user-set PUPPETEER_EXECUTABLE_PATH always wins."""
     env = base_env()
-    if sys.platform == "darwin" and not env.get("PUPPETEER_EXECUTABLE_PATH"):
-        for app in ("Google Chrome.app/Contents/MacOS/Google Chrome",
-                    "Chromium.app/Contents/MacOS/Chromium",
-                    "Microsoft Edge.app/Contents/MacOS/Microsoft Edge"):
-            cand = Path("/Applications") / app
-            if cand.exists():
-                env["PUPPETEER_EXECUTABLE_PATH"] = str(cand)
-                break
+    if not env.get("PUPPETEER_EXECUTABLE_PATH") and (sys.platform == "darwin" or force_browser):
+        browser = system_browser()
+        if browser:
+            env["PUPPETEER_EXECUTABLE_PATH"] = browser
     return env
 
 
 def run(cmd, env=None, cwd=ROOT, timeout=1800):
-    p = subprocess.run(cmd, cwd=cwd, env=env or base_env(),
-                       capture_output=True, text=True, timeout=timeout)
-    return p.returncode, p.stdout + p.stderr
+    env = env or base_env()
+    # Resolve the program against the build PATH ourselves: Windows'
+    # CreateProcess searches the parent's PATH, not the child's, and never
+    # finds a .bat/.cmd (latexml, pa11y) given without its suffix.
+    exe = shutil.which(cmd[0], path=env.get("PATH"))
+    if exe:
+        cmd = [exe] + list(cmd[1:])
+    # Tool output is UTF-8 (LaTeXML, pa11y) whatever the console's code page.
+    p = subprocess.run(cmd, cwd=cwd, env=env, capture_output=True, text=True,
+                       encoding="utf-8", errors="replace", timeout=timeout)
+    return p.returncode, (p.stdout or "") + (p.stderr or "")
 
 
 # ---------------------------------------------------------------------------
@@ -152,18 +244,38 @@ def write_wrapper(nn, keep_announcements=False):
 
 def build_web(nn, keep_announcements=False):
     if not BOOKML.is_dir():
-        sys.exit("bookml/ is missing -- run ./setup.sh to fetch it (docs/setup.md)")
+        sys.exit("bookml/ is missing -- run ./setup.sh to fetch it, or on Windows unzip "
+                 "the pinned release into bookml/ (docs/setup.md)")
+    env = base_env()
+    make = make_exe(env)
+    if not make:
+        sys.exit("GNU make not found (make / gmake) -- on Windows, Strawberry Perl "
+                 "provides gmake (docs/setup.md)")
     write_wrapper(nn, keep_announcements)
-    target = f"{WEB_AUX.relative_to(ROOT)}/html/lecture{nn}/index.html"
-    print(f"  bookml: make {target}")
-    rc, out = run(["make", target])
+    # the target must match BookML's rules with forward slashes on Windows too
+    target = f"{WEB_AUX.relative_to(ROOT).as_posix()}/html/lecture{nn}/index.html"
+    print(f"  bookml: {Path(make).stem} {target}")
+    rc, out = run(make_cmd(make, target), env=env)
     (BUILD / "logs").mkdir(parents=True, exist_ok=True)
     (BUILD / "logs" / f"lecture{nn}.make.log").write_text(out, encoding="utf-8")
     if rc != 0:
         print(out[-2000:])
         print(f"BUILD FAILED (make exit {rc}) -- full log: build/logs/lecture{nn}.make.log")
         return False
+    fix_backslash_hrefs(SITE / f"lecture{nn}")
     return True
+
+
+def fix_backslash_hrefs(page_dir):
+    """latexmlpost on Windows writes the copied --css path into every page
+    with a backslash (href="shared\\kit.css"); forward slashes work on every
+    platform.  Rewrites only what it finds -- a no-op on macOS and Linux."""
+    for page in sorted(page_dir.glob("*.html")):
+        html = page.read_text(encoding="utf-8")
+        fixed = re.sub(r'href="([^"]*\\[^"]*)"',
+                       lambda m: 'href="' + m.group(1).replace("\\", "/") + '"', html)
+        if fixed != html:
+            page.write_text(fixed, encoding="utf-8")
 
 
 # ---------------------------------------------------------------------------
@@ -199,8 +311,9 @@ def check_boxes(log_path):
 def build_slides(nn):
     SLIDES.mkdir(parents=True, exist_ok=True)
     job = f"lecture{nn}-slides"
+    outdir = SLIDES.relative_to(ROOT).as_posix()  # forward slashes on Windows too
     cmd = ["latexmk", "-pdf", f"-usepretex=\\def\\kitlecture{{{nn}}}",
-           f"-jobname={job}", f"-output-directory={SLIDES.relative_to(ROOT)}",
+           f"-jobname={job}", f"-output-directory={outdir}",
            "-interaction=nonstopmode", "-halt-on-error", "drivers/slides.tex"]
     rc, out = run(cmd)
     if rc != 0:
@@ -233,7 +346,7 @@ def build_slides(nn):
         print(f"  boxes: {len(bad)} overfull > {OVERFULL_TOLERANCE_PT:g}pt -- "
               "reported, not enforced (\\coursedecks is not yes: web-only course)")
     run(["latexmk", "-c", f"-jobname={job}",
-         f"-output-directory={SLIDES.relative_to(ROOT)}", "drivers/slides.tex"])
+         f"-output-directory={outdir}", "drivers/slides.tex"])
     for ext in (".nav", ".snm", ".vrb"):  # beamer extras latexmk -c leaves
         p = SLIDES / (job + ext)
         if p.exists():
@@ -249,7 +362,7 @@ def build_slides(nn):
 def render_figure(nn, name):
     src = ROOT / "figures" / f"lecture{nn}" / f"{name}.tex"
     if not src.exists():
-        sys.exit(f"no such figure: {src.relative_to(ROOT)}")
+        sys.exit(f"no such figure: {src.relative_to(ROOT).as_posix()}")
     outdir = BUILD / "figures"
     outdir.mkdir(parents=True, exist_ok=True)
     job = f"lecture{nn}-{name}"
@@ -266,20 +379,20 @@ def render_figure(nn, name):
         f"\\begin{{document}}\\input{{figures/lecture{nn}/{name}.tex}}\\end{{document}}\n",
         encoding="utf-8")
     rc, out = run(["pdflatex", "-interaction=nonstopmode", "-halt-on-error",
-                   f"-output-directory={outdir.relative_to(ROOT)}",
-                   f"-jobname={job}", str(wrapper.relative_to(ROOT))], timeout=300)
+                   f"-output-directory={outdir.relative_to(ROOT).as_posix()}",
+                   f"-jobname={job}", wrapper.relative_to(ROOT).as_posix()], timeout=300)
     if rc != 0:
         print(out[-1200:])
-        print(f"FIGURE FAILED: {src.relative_to(ROOT)}")
+        print(f"FIGURE FAILED: {src.relative_to(ROOT).as_posix()}")
         return False
     pdf = outdir / f"{job}.pdf"
-    print(f"  ok -> {pdf.relative_to(ROOT)}")
+    print(f"  ok -> {pdf.relative_to(ROOT).as_posix()}")
     if sys.platform == "darwin":
         png = outdir / f"{job}.png"
         rc2, _ = run(["sips", "-s", "format", "png", str(pdf), "--out", str(png)],
                      timeout=120)
         if rc2 == 0:
-            print(f"  ok -> {png.relative_to(ROOT)}")
+            print(f"  ok -> {png.relative_to(ROOT).as_posix()}")
     for ext in (".aux", ".log", ".wrapper.tex"):
         p = outdir / (job + ext) if ext != ".wrapper.tex" else wrapper
         if p.exists():
@@ -347,13 +460,21 @@ def libgs_available():
 def pa11y_page(path, strict, skip):
     if skip:
         return True, "skipped"
-    exe = shutil.which("pa11y")
+    exe = which("pa11y")
     if not exe:
         if strict:
             return False, "pa11y NOT INSTALLED (required by --strict)"
         return True, "not installed -- audit skipped; install Node.js, then `npm install -g pa11y`"
-    rc, out = run([exe, "--runner", "axe", "--hide-elements", "math",
-                   path.resolve().as_uri()], env=pa11y_env(), timeout=300)
+    cmd = [exe, "--runner", "axe", "--hide-elements", "math", path.resolve().as_uri()]
+    env = pa11y_env()
+    rc, out = run(cmd, env=env, timeout=300)
+    if rc not in (0, 2):
+        # exit 1 is a technical failure, typically puppeteer's bundled browser
+        # not launching: retry once with the installed browser (Edge on
+        # Windows) when that would change anything
+        retry = pa11y_env(force_browser=True)
+        if retry.get("PUPPETEER_EXECUTABLE_PATH") != env.get("PUPPETEER_EXECUTABLE_PATH"):
+            rc, out = run(cmd, env=retry, timeout=300)
     if rc == 0:
         return True, "No issues found"
     if rc == 2:
@@ -366,7 +487,8 @@ PA11Y_MISSING_WARNING = """\
          the page was built and checked otherwise, but it has NOT been audited.
          To install: get Node.js (https://nodejs.org), then run `npm install -g pa11y`
          (./setup.sh offers this), or ask whoever administers this machine; then
-         `./course.py check NN` re-runs the checks without rebuilding."""
+         `./course.py check NN` (Windows: `python course.py check NN`) re-runs
+         the checks without rebuilding."""
 
 
 def check_lecture(nn, strict=False, no_pa11y=False):
@@ -432,7 +554,7 @@ def check_lecture(nn, strict=False, no_pa11y=False):
 
     # pa11y, every page -- a missing pa11y warns and is reported on the PASS
     # line; it fails the check only under --strict
-    if not no_pa11y and not shutil.which("pa11y"):
+    if not no_pa11y and not which("pa11y"):
         if strict:
             print("  pa11y: NOT INSTALLED -- required by --strict")
             ok = False
@@ -490,7 +612,7 @@ def build_index(strict=False, no_pa11y=False):
     SITE.mkdir(parents=True, exist_ok=True)
     out = SITE / "index.html"
     out.write_text(page, encoding="utf-8")
-    print(f"index: {len(rows)} lecture(s) -> {out.relative_to(ROOT)}")
+    print(f"index: {len(rows)} lecture(s) -> {out.relative_to(ROOT).as_posix()}")
     good, msg = pa11y_page(out, strict, no_pa11y)
     print(f"  pa11y: {msg}" if isinstance(msg, str) else "")
     return good
@@ -502,22 +624,35 @@ def build_index(strict=False, no_pa11y=False):
 
 def doctor():
     ok = True
+    env = base_env()
 
     def probe(name, cmd, required=True, note=""):
         nonlocal ok
-        exe = shutil.which(cmd[0])
+        exe = which(cmd[0], env)
         if not exe:
             print(f"  {'MISSING' if required else 'absent '}: {name}" + (f" ({note})" if note else ""))
             if required:
                 ok = False
             return None
-        rc, out = run(cmd, timeout=60)
-        ver = out.strip().splitlines()[0] if out.strip() else ""
+        rc, out = run(cmd, env=env, timeout=60)
+        # the version line: the first naming the tool (latexmk on Windows
+        # prints code-page chatter first), else simply the first
+        lines = [l.strip() for l in out.splitlines() if l.strip()]
+        ver = next((l for l in lines if name.lower() in l.lower()), lines[0] if lines else "")
         print(f"  ok: {name} -- {ver[:70]}" + (f" ({note})" if note else ""))
         return out
 
-    print("software the kit needs (expected on your PATH; KIT_TEXBIN adds a TeX directory first):")
-    probe("make", ["make", "--version"])
+    print("software the kit needs (expected on your PATH; KIT_TEXBIN adds a TeX directory first"
+          + ("; KIT_STRAWBERRY names Strawberry Perl's folder if not C:\\Strawberry"
+             if sys.platform == "win32" else "") + "):")
+    print(f"  ok: python -- {sys.version.split()[0]}")
+    make = make_exe(env)
+    if make:
+        probe("make", [make, "--version"],
+              note="" if Path(make).stem == "make" else f"found as {Path(make).name.lower()}")
+    else:
+        print("  MISSING: make (GNU make -- on Windows, Strawberry Perl provides gmake)")
+        ok = False
     probe("latexmk", ["latexmk", "--version"])
     probe("pdflatex", ["pdflatex", "--version"])
     probe("latexml", ["latexml", "--VERSION"], note="kit validated on 0.8.8 + classic-TeX preamble")
@@ -529,7 +664,7 @@ def doctor():
     if wired and not os.environ.get("LIBGS"):
         print(f"  note: LIBGS auto-wired to {wired} for dvisvgm")
     for sty in ("preview.sty", "comment.sty"):
-        rc, out = run(["kpsewhich", sty], timeout=60)
+        rc, out = run(["kpsewhich", sty], env=env, timeout=60)
         if rc == 0 and out.strip():
             print(f"  ok: {sty} -- {out.strip().splitlines()[0]}")
         else:
@@ -538,12 +673,15 @@ def doctor():
     if BOOKML.is_dir():
         print(f"  ok: bookml/ present")
     else:
-        print("  MISSING: bookml/ -- run ./setup.sh to fetch the fixed release (docs/setup.md)")
+        print("  MISSING: bookml/ -- run ./setup.sh to fetch the fixed release, or on "
+              "Windows unzip it into bookml/ (docs/setup.md)")
         ok = False
-    if shutil.which("pa11y"):
-        env = pa11y_env()
-        browser = env.get("PUPPETEER_EXECUTABLE_PATH", "(puppeteer default)")
-        print(f"  ok: pa11y -- browser: {browser}")
+    if which("pa11y", env):
+        browser = pa11y_env().get("PUPPETEER_EXECUTABLE_PATH")
+        fallback = system_browser()
+        print(f"  ok: pa11y -- browser: {browser}" if browser else
+              "  ok: pa11y -- browser: puppeteer's own"
+              + (f", retried with {fallback} if it fails to launch" if fallback else ""))
     else:
         print("  absent : pa11y -- the accessibility audit will be skipped with a warning; "
               "install Node.js, then `npm install -g pa11y` (./setup.sh offers this)")
@@ -565,16 +703,29 @@ def doctor():
 # clean
 # ---------------------------------------------------------------------------
 
+def rmtree(path):
+    """shutil.rmtree that also deletes read-only files: latexmlpost copies
+    its stylesheets into each page folder read-only, and Windows refuses a
+    plain delete of such a file (POSIX only needs the folder writable)."""
+    def force(func, p, _exc):
+        os.chmod(p, stat.S_IWRITE)
+        func(p)
+    if sys.version_info >= (3, 12):
+        shutil.rmtree(path, onexc=force)
+    else:
+        shutil.rmtree(path, onerror=force)
+
+
 def clean(deep=False):
     for p in [BUILD] + sorted(ROOT.glob("lecture[0-9][0-9].tex")) \
             + sorted(ROOT.glob("*.zip")):
         if isinstance(p, Path) and p.exists():
-            shutil.rmtree(p) if p.is_dir() else p.unlink()
+            rmtree(p) if p.is_dir() else p.unlink()
             print(f"  removed {p.relative_to(ROOT)}")
     if deep:
         for p in (ROOT / "bmlimages",):
             if p.exists():
-                shutil.rmtree(p)
+                rmtree(p)
                 print(f"  removed {p.relative_to(ROOT)} (figure cache)")
 
 

@@ -23,6 +23,46 @@ log live in `conventions.md`.
 
 ---
 
+## 2026-10-24 — Windows support for the driver
+
+### Fixed
+
+- **`course.py` runs on Windows.** As shipped, `doctor` reported `make` and
+  `latexml` missing on a Windows machine that had everything installed, and
+  no build could start: Strawberry Perl's folders (where LaTeXML and GNU
+  make live on Windows) are not always on PATH, GNU make is called `gmake`
+  there, and Windows cannot start a `.bat` program (`latexml`, `pa11y`)
+  named without its suffix — `latexml --VERSION` crashed `doctor` outright.
+  The driver now puts Strawberry Perl first on the PATH of every build
+  command (`C:\Strawberry`, or `KIT_STRAWBERRY`), accepts `gmake` /
+  `mingw32-make` when there is no `make`, and resolves every program it runs
+  against that PATH itself. macOS and Linux behaviour is unchanged.
+- Five smaller Windows defects, found by building the sample lecture there:
+  BookML's make is now told `SHELL=cmd.exe` on its command line (GNU make on
+  Windows runs its probes through Git Bash's `sh.exe` whenever that is on
+  PATH, whatever the environment says, and BookML's early `2>NUL` probes
+  then left a stray file named `NUL` in the repository); the driver's
+  console output is UTF-8 with unencodable characters replaced, so a pa11y
+  or LaTeXML message carrying a math glyph no longer crashes a redirected
+  run mid-batch; the one backslash `latexmlpost` writes into each page's
+  stylesheet link (`shared\kit.css`) is corrected to a forward slash after
+  the build; when pa11y's own browser fails to launch, the audit is retried
+  once with the installed Edge; and `clean` no longer fails on the read-only
+  stylesheets `latexmlpost` copies into each page folder (Windows refuses a
+  plain delete of a read-only file). Make targets and TeX output
+  directories are passed with forward slashes on every platform.
+- `docs/setup.md` has a real Windows section in place of the one-paragraph
+  stub: the install recipe (TeX Live, whose `dvisvgm` already carries
+  Ghostscript; Strawberry Perl and `cpanm --notest LaTeXML`; the pinned
+  BookML release unzipped by hand; Node.js and pa11y, with the PowerShell
+  execution-policy gotcha; `python course.py` as the way to run the driver),
+  and BookML's container image as the machine-independent fallback, with
+  its caveats. The README points Windows readers there.
+
+Validated on Windows 11 with stock TeX Live 2026, Strawberry Perl + LaTeXML
+0.8.8, BookML v0.29.4 and Node + pa11y 10: `doctor` clean, `build 00` and
+`slides 00` PASS.
+
 ## 2026-09-12 — Slides become opt-in; documentation pass before going public
 
 ### Changed
