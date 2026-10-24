@@ -269,12 +269,14 @@ def build_web(nn, keep_announcements=False):
 
 def postprocess(nn):
     """The post-build pass over a lecture's pages: the current stylesheet,
-    table scroll wrappers, forward-slash hrefs.  Idempotent, and run by every
-    `build` -- including one whose page make found up to date."""
+    table scroll wrappers, forward-slash hrefs, the first section page's
+    "previous" label.  Idempotent, and run by every `build` -- including one
+    whose page make found up to date."""
     page_dir = SITE / f"lecture{nn}"
     sync_site_css(page_dir)
     wrap_tables(page_dir)
     fix_backslash_hrefs(page_dir)
+    relabel_first_prev(page_dir)
 
 
 def sync_site_css(page_dir):
@@ -329,6 +331,19 @@ def fix_backslash_hrefs(page_dir):
                        lambda m: 'href="' + m.group(1).replace("\\", "/") + '"', html)
         if fixed != html:
             page.write_text(fixed, encoding="utf-8")
+
+
+def relabel_first_prev(page_dir):
+    """Label the first section page's "previous" link "Lecture start".
+    Rewrites only what it finds, so a second run changes nothing."""
+    # First section page: LaTeXML's "previous" is the document's own entry page,
+    # titled in full, duplicating "up" right above it; label it by what it is.
+    for page in sorted(page_dir.glob("*.html")):
+        html = page.read_text(encoding="utf-8")
+        relabeled = re.sub(r'(<a href="index\.html"[^>]*rel="prev"[^>]*><span class="ltx_text ltx_ref_title">)'
+                           r'[^<]*(</span></a>)', r"\1Lecture start\2", html)
+        if relabeled != html:
+            page.write_text(relabeled, encoding="utf-8")
 
 
 # ---------------------------------------------------------------------------

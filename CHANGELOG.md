@@ -61,6 +61,13 @@ log live in `conventions.md`.
   the site stylesheet into each built lecture, so a CSS edit needs no
   rebuild. Decided for PHYS 567 and mirrored here.
 
+### Changed
+
+- **Header and footer navigation is a title row, then a previous / next
+  row.** A long title no longer jumbles LaTeXML's float layout. The first
+  section page's "previous" link reads "Lecture start" instead of repeating
+  the title, and the header sticks only at the normal width.
+
 ### Fixed
 
 - **`course.py` runs on Windows.** As shipped, `doctor` reported `make` and

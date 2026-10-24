@@ -51,6 +51,47 @@ a { color: var(--physblue); }
   text-decoration: underline;
 }
 
+/* ---- page navigation: LaTeXML's header and footer links ------------------
+   LaTeXML puts the navigation links in one div in each page's header (the
+   document title, rel="up", then previous and next) and footer (previous and
+   next), and LaTeXML.css lays them out with floats: previous at the left,
+   the title centered, next at the right.  A long title wraps that into a
+   jumble.  A two-row grid instead: the title on its own centered row, then
+   previous and next each in its own half, wrapping within it.  The DOM order
+   is unchanged (title, previous, next), so a screen reader hears the
+   document title first, then the neighbors; the arrows are plain generated
+   text. */
+.ltx_page_header .ltx_align_center, .ltx_page_footer .ltx_align_center {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas: "up up" "prev next";
+  gap: 0.25rem 1.5rem;
+  align-items: start;
+  text-align: left;
+}
+.ltx_page_header a[rel~="up"], .ltx_page_footer a[rel~="up"] {
+  grid-area: up; display: block; text-align: center; float: none;
+}
+.ltx_page_header a[rel~="prev"], .ltx_page_footer a[rel~="prev"] {
+  grid-area: prev; float: none; text-align: left; justify-self: start;
+}
+.ltx_page_header a[rel~="next"], .ltx_page_footer a[rel~="next"] {
+  grid-area: next; float: none; text-align: right; justify-self: end;
+}
+.ltx_page_header a[rel~="prev"]::before, .ltx_page_footer a[rel~="prev"]::before { content: "\2190\00a0"; }
+.ltx_page_header a[rel~="next"]::after,  .ltx_page_footer a[rel~="next"]::after  { content: "\00a0\2192"; }
+/* LaTeXML.css clears its floats with pseudo-elements (on the header and
+   footer themselves); a pseudo-element on this grid container would become
+   a grid item, so it is switched off here. */
+.ltx_page_header .ltx_align_center::after, .ltx_page_footer .ltx_align_center::after { content: none; }
+/* Below the normal width the title and the two neighbor links wrap to six or
+   seven lines in the header; a sticky bar that tall would hide the content
+   under it, so the header sticks only at the normal width (the page-chrome
+   rules above make it sticky). */
+@media (max-width: 52rem) {
+  .ltx_page_header { position: static; }
+}
+
 /* ---- headings ------------------------------------------------------------ */
 h1.ltx_title_document, .ltx_title_section, .ltx_title_subsection {
   font-family: "Helvetica Neue", Arial, sans-serif;
