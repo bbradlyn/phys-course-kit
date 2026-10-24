@@ -122,9 +122,11 @@ the MathML is checked for a known way it can come out malformed, no slide
 overlay mark may have leaked onto the page as text, every display equation
 and data table is measured in a real browser at the site's normal width (the
 full reading column, which any screen from about 800px up shows) and must fit
-its card with room to spare — wider means the source is fixed, never scrolled
-or scaled, while on a phone a wide equation scrolls in its own box rather
-than the page — and each
+its card with room to spare — a backstop: a course that lectures from slides
+already keeps them narrower than the page, since a slide is narrower than
+the reading column, while a web-only course has no other width gate; wider
+means the source is fixed, never scrolled or scaled, and on a phone a wide
+equation scrolls in its own box rather than the page — and each
 page gets an automated accessibility audit (axe, via pa11y — `setup.sh`
 offers to install it; without it the build still produces the page and
 prints a warning with install instructions, and that page has not been

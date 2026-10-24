@@ -148,8 +148,12 @@ manual cannot.
 - **S4 — validation and sign-off.** The batch check, as a stage. For every
   lecture in the batch, `./course.py build NN` must PASS — the web build
   with its full check suite: no conversion-log errors, every figure's alt
-  text present and non-empty, well-formed MathML, every display equation
-  and data table fitting its card at the site's normal width, and the
+  text present and non-empty, well-formed MathML, the width backstop
+  (every display equation and data table measured against its card at the
+  site's normal width — a deck course's slide gate already keeps them
+  narrower than the page, so it passes by construction there; for a
+  web-only course it is the one width gate; nothing for you to run or
+  consult, it is part of the build), and the
   automated accessibility audit of every page (if the build warns that pa11y is
   missing, the page was built but not audited: show the operator the
   warning and the install instructions it prints — you cannot install it
@@ -224,9 +228,11 @@ that are mathematically sound (proceed, per contract #5).
 `./course.py build NN` PASS: the web page built and every check on it is
 clean — no latexml errors, no `[ALT MISSING]` and no empty figure `alt`,
 the malformed-MathML counter at zero, no overlay spec leaked onto the page
-as text, every display equation and data table fitting its card at the
-site's normal width (the width check: wider means the source is fixed,
-never scrolled or scaled), and the automated accessibility
+as text, the width backstop passing (every display equation and data table
+within its card at the site's normal width — automatic for a deck course,
+whose slide gate is the narrower constraint, and the only width gate a
+web-only course has; wider means the source is fixed, never scrolled or
+scaled), and the automated accessibility
 audit (axe, via pa11y) passing on every page, or — when pa11y is not
 installed — the build's warning that the audit was skipped, which the
 operator sees before sign-off. `./course.py slides NN`

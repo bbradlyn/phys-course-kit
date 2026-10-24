@@ -37,7 +37,11 @@ log live in `conventions.md`.
   printing `widths at the normal column: N equations, widest nn% of the
   card` and failing on anything wider with `TOO WIDE nn% (page): … --
   break the equation in the source`. Wider always means the source is fixed
-  (break the equation, re-lay the table), never scrolled or scaled. Below
+  (break the equation, re-lay the table), never scrolled or scaled. The
+  check is a backstop, not a step: a deck course's slide gate already keeps
+  its content narrower than the page (a slide is narrower than the reading
+  column), so it passes by construction there, and for a web-only course it
+  is the only width gate. Below
   the normal width (phones, small tablets) an equation or table wider than
   the column scrolls within its own box, so the page never scrolls
   sideways: `shared/kit.css` gives BookML's equation containers and a
