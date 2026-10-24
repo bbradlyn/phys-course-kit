@@ -36,7 +36,8 @@ Per lecture, four stages — and a fifth only if you lecture from slides:
 4. **S4 — checks and sign-off.** The assistant builds every lecture in the
    batch both ways and shows you the results: the web page with all its
    checks passing — no conversion errors, a description on every figure,
-   well-formed math, and an automated accessibility audit of every page
+   well-formed math, every equation and table fitting the page at its
+   normal width, and an automated accessibility audit of every page
    (if the audit software is missing, the build still produces the page
    and prints a warning with install instructions; the assistant shows you
    the warning, and you decide — install it, or sign off with the audit

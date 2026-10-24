@@ -148,8 +148,9 @@ manual cannot.
 - **S4 — validation and sign-off.** The batch check, as a stage. For every
   lecture in the batch, `./course.py build NN` must PASS — the web build
   with its full check suite: no conversion-log errors, every figure's alt
-  text present and non-empty, well-formed MathML, and the automated
-  accessibility audit of every page (if the build warns that pa11y is
+  text present and non-empty, well-formed MathML, every display equation
+  and data table fitting its card at the site's normal width, and the
+  automated accessibility audit of every page (if the build warns that pa11y is
   missing, the page was built but not audited: show the operator the
   warning and the install instructions it prints — you cannot install it
   for them — and let them choose: install and re-run, or sign off with
@@ -223,7 +224,9 @@ that are mathematically sound (proceed, per contract #5).
 `./course.py build NN` PASS: the web page built and every check on it is
 clean — no latexml errors, no `[ALT MISSING]` and no empty figure `alt`,
 the malformed-MathML counter at zero, no overlay spec leaked onto the page
-as text, and the automated accessibility
+as text, every display equation and data table fitting its card at the
+site's normal width (the width check: wider means the source is fixed,
+never scrolled or scaled), and the automated accessibility
 audit (axe, via pa11y) passing on every page, or — when pa11y is not
 installed — the build's warning that the audit was skipped, which the
 operator sees before sign-off. `./course.py slides NN`

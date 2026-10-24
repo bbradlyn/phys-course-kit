@@ -37,7 +37,7 @@ git fetch kit-upstream
 | LaTeXML 0.8.8+ | the LaTeX→XML→HTML engine | `brew install latexml` / distro package / `cpanm LaTeXML` |
 | Ghostscript (with libgs) — recommended; without it builds still pass, with a harmless warning about figure baselines | dvisvgm reads figure baselines through the Ghostscript *library* | `brew install ghostscript` |
 | BookML (one fixed version) | a layer on top of LaTeXML: dvisvgm figure images, packaging | fetched by `setup.sh`, checksum-verified |
-| Node (the JavaScript runtime pa11y runs on) + pa11y — needed for the accessibility audit; without it the build still produces the page and prints a warning with install instructions | the accessibility audit among the checks | `npm install -g pa11y` |
+| Node (the JavaScript runtime pa11y runs on) + pa11y — needed for the accessibility audit and the width check (pa11y's headless browser drives both); without them the build still produces the page and prints a warning with install instructions | the accessibility audit and the equation/table width check among the checks | `npm install -g pa11y` |
 
 On macOS and Linux, `./setup.sh` checks all of it, asks before installing
 anything, and fetches BookML at its fixed release (`--dry-run` shows what it
@@ -71,12 +71,13 @@ runs.
   to launch; to choose a different browser, set `PUPPETEER_EXECUTABLE_PATH`
   to its path.
 - **pa11y is optional by default**: without it, `build` and `check` still
-  produce and check the page, skip the audit, and print a warning with
-  install instructions (the audit needs Node.js, which not every machine
-  or assistant can install). `--strict` turns a missing pa11y (or a browser that
-  fails to launch) into a build failure — use it for automated runs on
-  another machine; `--no-pa11y` skips the audit deliberately when you want
-  a fast local rebuild.
+  produce and check the page, skip the audit and the width check (both need
+  its headless browser), and print a warning with install instructions (the
+  audit needs Node.js, which not every machine or assistant can install).
+  `--strict` turns a missing pa11y (or a browser that fails to launch) into
+  a build failure — use it for automated runs on another machine;
+  `--no-pa11y` skips both browser checks deliberately when you want a fast
+  local rebuild.
 
 ## Windows
 

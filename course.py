@@ -38,6 +38,7 @@ every build command and its gmake stands in for make; run the driver as
 
 import argparse
 import glob
+import json
 import os
 import re
 import shutil
@@ -262,8 +263,60 @@ def build_web(nn, keep_announcements=False):
         print(out[-2000:])
         print(f"BUILD FAILED (make exit {rc}) -- full log: build/logs/lecture{nn}.make.log")
         return False
-    fix_backslash_hrefs(SITE / f"lecture{nn}")
+    postprocess(nn)
     return True
+
+
+def postprocess(nn):
+    """The post-build pass over a lecture's pages: the current stylesheet,
+    table scroll wrappers, forward-slash hrefs.  Idempotent, and run by every
+    `build` -- including one whose page make found up to date."""
+    page_dir = SITE / f"lecture{nn}"
+    sync_site_css(page_dir)
+    wrap_tables(page_dir)
+    fix_backslash_hrefs(page_dir)
+
+
+def sync_site_css(page_dir):
+    """Refresh the site stylesheet(s) in a built lecture.  latexmlpost copies
+    them only when it runs, and a stylesheet edit does not make the page
+    stale for make -- so `build` on an up-to-date lecture still delivers the
+    current CSS."""
+    dest = page_dir / "shared"
+    if dest.is_dir():
+        for src in (ROOT / "shared").glob("*.css"):
+            if (dest / src.name).is_file():
+                shutil.copyfile(src, dest / src.name)
+
+
+def wrap_tables(page_dir):
+    """Wrap every data table (<table class="ltx_tabular ...">) in
+    <div class="table-scroll">, the narrow-screen scroll box shared/kit.css
+    styles.  A wrapper rather than CSS on the table: display:block on a
+    <table> strips its table semantics for screen readers in Chrome and
+    Safari.  Nested tables are left alone; already-wrapped ones are skipped."""
+    for page in sorted(page_dir.glob("*.html")):
+        html = page.read_text(encoding="utf-8")
+        out, pos, changed = [], 0, False
+        for m in re.finditer(r'<table\b[^>]*class="[^"]*\bltx_tabular\b[^"]*"[^>]*>', html):
+            if m.start() < pos:
+                continue
+            if html[max(0, m.start() - 40):m.start()].rstrip().endswith('<div class="table-scroll">'):
+                continue
+            depth, end = 0, None   # the matching </table>, honoring nesting
+            for t in re.finditer(r"<table\b|</table>", html[m.start():]):
+                depth += 1 if t.group(0) == "<table" else -1
+                if depth == 0:
+                    end = m.start() + t.end()
+                    break
+            if end is None or html.count("<table", m.start(), end) > 1:
+                continue   # unterminated or nested: leave it
+            out.append(html[pos:m.start()])
+            out.append('<div class="table-scroll">' + html[m.start():end] + "</div>")
+            pos, changed = end, True
+        if changed:
+            out.append(html[pos:])
+            page.write_text("".join(out), encoding="utf-8")
 
 
 def fix_backslash_hrefs(page_dir):
@@ -482,6 +535,82 @@ def pa11y_page(path, strict, skip):
     return (not strict), f"TECHNICAL FAILURE (exit {rc}) -- browser/launch problem, not an audit result"
 
 
+# ---------------------------------------------------------------------------
+# widths at the normal column (desktop-first calibration)
+# ---------------------------------------------------------------------------
+
+# The reading column is capped at 46rem (shared/kit.css), so every viewport
+# from about 800px up gives the same layout: that is the NORMAL width the site
+# is calibrated for.  There, every display equation's ink and every data
+# table must stay within this fraction of its card's inner width -- the rest
+# is slack for browser math fonts, which differ by a few percent.  Wider
+# means the SOURCE is fixed (break the equation, re-lay the table), never
+# scrolled or scaled.  Below the normal width (phones, small tablets) an
+# equation or table wider than the column scrolls within its own box
+# (shared/kit.css), so the page never scrolls sideways; those boxes never
+# engage at the normal width, which is what this check guarantees.
+EQN_WIDTH_MAX = 0.90
+EQN_VIEWPORT = "1280x1024"
+EQWIDTH_JS = ROOT / "shared" / "eqwidth.js"
+
+
+def npm_global_root(env):
+    """Where `npm install -g` puts packages (pa11y, and its puppeteer)."""
+    npm = which("npm", env)
+    if not npm:
+        return None
+    rc, out = run([npm, "root", "-g"], env=env, timeout=60)
+    lines = [l.strip() for l in out.splitlines() if l.strip()]
+    return lines[-1] if rc == 0 and lines else None
+
+
+def puppeteer_dir(env):
+    """pa11y's own node_modules, when Node and pa11y's puppeteer are there."""
+    root = npm_global_root(env) if which("node", env) else None
+    pup = Path(root) / "pa11y" / "node_modules" if root else None
+    return pup if pup and (pup / "puppeteer").is_dir() else None
+
+
+def equation_widths(pages, strict):
+    """Run shared/eqwidth.js on the pages at the normal column.  Returns
+    (ok, measured, lines): measured is False when the check could not run
+    (no Node, no puppeteer, a browser failure) -- a warning, or a failure
+    under --strict."""
+    env = pa11y_env()
+    pup = puppeteer_dir(env)
+    if not pup:
+        return (not strict), False, ["widths: NOT MEASURED -- needs Node.js and pa11y (its puppeteer "
+                                     "drives the browser); equations and tables were not checked "
+                                     "against the column"]
+    node_path = str(pup) + os.pathsep + str(pup.parent.parent)
+    env["NODE_PATH"] = node_path
+    cmd = [which("node", env), str(EQWIDTH_JS), "--threshold", str(EQN_WIDTH_MAX),
+           "--viewport", EQN_VIEWPORT, *[p.resolve().as_uri() for p in pages]]
+    rc, out = run(cmd, env=env, timeout=900)
+    if rc not in (0, 2):
+        # a launch failure: retry once with the installed browser, as pa11y does
+        retry = pa11y_env(force_browser=True)
+        if retry.get("PUPPETEER_EXECUTABLE_PATH") != env.get("PUPPETEER_EXECUTABLE_PATH"):
+            retry["NODE_PATH"] = node_path
+            rc, out = run(cmd, env=retry, timeout=900)
+    if rc not in (0, 2):
+        return (not strict), False, ["widths: TECHNICAL FAILURE (browser launch?) -- not a measurement: "
+                                     + " | ".join(out.strip().splitlines()[-3:])]
+    data = json.loads([l for l in out.splitlines() if l.startswith("{")][-1])
+    mx, mt = data.get("max") or {}, data.get("maxTable") or {}
+    line = (f"widths at the normal column: {data['equations']} equations, widest "
+            f"{round(100 * mx.get('ratio', 0))}% of the card"
+            + (f" ({mx['page']}: {mx['alt'][:36]})" if mx else ""))
+    if data.get("tables"):
+        line += f"; {data['tables']} tables, widest {round(100 * mt.get('ratio', 0))}%"
+    lines = [line]
+    for x in data["over"][:8]:
+        lines.append(f"  TOO WIDE {round(100 * x['ratio'])}% ({x['page']}): {x['alt']} -- "
+                     + ("break the equation" if x["kind"] == "equation" else "re-lay the table")
+                     + " in the source")
+    return not data["over"], True, lines
+
+
 PA11Y_MISSING_WARNING = """\
   pa11y: WARNING -- pa11y is not installed, so the accessibility audit was SKIPPED:
          the page was built and checked otherwise, but it has NOT been audited.
@@ -492,15 +621,16 @@ PA11Y_MISSING_WARNING = """\
 
 
 def check_lecture(nn, strict=False, no_pa11y=False):
-    """Returns (ok, audited): ok is the verdict; audited is False when the
-    accessibility audit could not run because pa11y is missing (a warning,
-    not a failure, unless --strict)."""
+    """Returns (ok, skipped): ok is the verdict; skipped names the browser
+    checks that could not run -- the accessibility audit when pa11y is
+    missing, the width check when Node or puppeteer is -- warnings, not
+    failures, unless --strict."""
     page_dir = SITE / f"lecture{nn}"
     ok = True
-    audited = True
+    skipped = []
     if not (page_dir / "index.html").exists():
         print(f"  MISSING: {page_dir}/index.html (build it first)")
-        return False, False
+        return False, []
 
     # latexml log: errors, with the known libgs/depth class told apart
     log = WEB_AUX / "latexmlaux" / f"lecture{nn}.latexml.log"
@@ -552,6 +682,15 @@ def check_lecture(nn, strict=False, no_pa11y=False):
     print(f"  checks: <math> {n_math} | unparsed {n_unparsed} | figures {n_imgs} | bare-math-text 0 | overlay-leak 0"
           if ok else f"  checks: <math> {n_math} | unparsed {n_unparsed} | figures {n_imgs}")
 
+    # widths at the normal column (desktop-first calibration), before the audit
+    if not no_pa11y:
+        good, measured, lines = equation_widths(sorted(page_dir.glob("*.html")), strict)
+        for line in lines:
+            print("  " + line)
+        ok = ok and good
+        if not measured:
+            skipped.append("widths NOT MEASURED")
+
     # pa11y, every page -- a missing pa11y warns and is reported on the PASS
     # line; it fails the check only under --strict
     if not no_pa11y and not which("pa11y"):
@@ -560,16 +699,18 @@ def check_lecture(nn, strict=False, no_pa11y=False):
             ok = False
         else:
             print(PA11Y_MISSING_WARNING)
-            audited = False
+            skipped.append("accessibility audit SKIPPED: pa11y not installed")
     else:
+        pa_ok = True
         for page in sorted(page_dir.glob("*.html")):
             good, msg = pa11y_page(page, strict, no_pa11y)
             if not good:
                 print(f"  pa11y {page.name}: {msg}")
-                ok = False
+                pa_ok = False
+        ok = ok and pa_ok
         if not no_pa11y:
-            print("  pa11y: clean" if ok else "  pa11y: see above")
-    return ok, audited
+            print("  pa11y: clean" if pa_ok else "  pa11y: see above")
+    return ok, skipped
 
 
 # ---------------------------------------------------------------------------
@@ -676,6 +817,12 @@ def doctor():
         print("  MISSING: bookml/ -- run ./setup.sh to fetch the fixed release, or on "
               "Windows unzip it into bookml/ (docs/setup.md)")
         ok = False
+    if puppeteer_dir(env):
+        print(f"  ok: width check -- node + pa11y's puppeteer (equations and tables at most "
+              f"{EQN_WIDTH_MAX:.0%} of the card at the {EQN_VIEWPORT} normal column)")
+    else:
+        print("  absent : width check -- needs Node.js and pa11y (its puppeteer); equations "
+              "and tables are then NOT measured against the column")
     if which("pa11y", env):
         browser = pa11y_env().get("PUPPETEER_EXECUTABLE_PATH")
         fallback = system_browser()
@@ -744,8 +891,10 @@ def main():
     ap.add_argument("--all", action="store_true", help="every lecture in content/")
     ap.add_argument("--keep-announcements", action="store_true",
                     help="build: include the announcements sidecar in the web page (one-off)")
-    ap.add_argument("--strict", action="store_true", help="missing pa11y is an error")
-    ap.add_argument("--no-pa11y", action="store_true", help="skip the accessibility audit deliberately (the build says so)")
+    ap.add_argument("--strict", action="store_true",
+                    help="a missing pa11y, or a width check that could not run, is an error")
+    ap.add_argument("--no-pa11y", action="store_true",
+                    help="skip the browser checks -- the accessibility audit and the width check -- deliberately (the build says so)")
     ap.add_argument("--deep", action="store_true", help="clean: also drop the figure cache")
     args = ap.parse_args()
 
@@ -770,14 +919,14 @@ def main():
         if args.verb == "slides":
             results[nn] = build_slides(nn)
         elif args.verb in ("build", "check"):
-            good, audited = True, True
+            good, skipped = True, []
             if args.verb == "build":
                 good = build_web(nn, args.keep_announcements)
             if good:
-                good, audited = check_lecture(nn, args.strict, args.no_pa11y)
+                good, skipped = check_lecture(nn, args.strict, args.no_pa11y)
             results[nn] = good
             print(("PASS" if good else "FAIL") + f" lecture{nn}"
-                  + ("" if audited else " (accessibility audit SKIPPED: pa11y not installed -- see the warning above)"))
+                  + (f" ({'; '.join(skipped)} -- see the warning above)" if skipped else ""))
     if args.verb == "build" and args.all:
         build_index(args.strict, args.no_pa11y)
     n_ok = sum(results.values())

@@ -102,7 +102,7 @@ is typed as `python course.py` wherever these pages say `./course.py`.
 | `alt/` | Figure alt-text sidecars, written when the figure is made |
 | `announcements/` | Per-lecture, day-of-editable, slides-only |
 | `drivers/` | The two short build files (web primary, slides optional) |
-| `shared/` | Course identity, macros, the two preambles, the palette |
+| `shared/` | Course identity, macros, the two preambles, the palette, the site stylesheet, the width-check script |
 | `notes/` | Per-lecture transcription work records (make batches resumable) |
 | `WORKFLOW.md` | **Your manual**: the loops you're part of — reviews, day-of-lecture, publishing |
 | `AGENTS.md` | The AI assistant's operating manual (`CLAUDE.md` is a pointer stub for Claude-family tools) |
@@ -119,7 +119,12 @@ is typed as `python course.py` wherever these pages say `./course.py`.
 Every `./course.py build NN` runs the full set of checks on the result: the
 conversion log is scanned for errors, every figure must carry its alt text,
 the MathML is checked for a known way it can come out malformed, no slide
-overlay mark may have leaked onto the page as text, and each
+overlay mark may have leaked onto the page as text, every display equation
+and data table is measured in a real browser at the site's normal width (the
+full reading column, which any screen from about 800px up shows) and must fit
+its card with room to spare — wider means the source is fixed, never scrolled
+or scaled, while on a phone a wide equation scrolls in its own box rather
+than the page — and each
 page gets an automated accessibility audit (axe, via pa11y — `setup.sh`
 offers to install it; without it the build still produces the page and
 prints a warning with install instructions, and that page has not been

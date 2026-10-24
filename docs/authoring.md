@@ -60,12 +60,23 @@ show). If in doubt, use `\onslide`.
 
 - Display math: `\[...\]`, `equation`, `align*`, `gathered`, `aligned` — all
   fine. Inline `$...$`.
-- **Break long display equations at the source.** Patterns that work: split
-  chains at `=` (`aligned`/`align*`), turn `A \qquad B` two-clause displays
-  into `gathered`, continue products with a leading `\times`/`\cdot` on the
-  next row. Browser math fonts differ by ~5%, so leave real width margin —
-  if an accessibility audit ever flags a scrollable equation, the fix is
-  breaking that equation, not suppressing the audit.
+- **Break long display equations at the source.** The site is calibrated
+  for its *normal* width: the full 46rem reading column of
+  `shared/kit.css`, which every viewport from about 800px up gives. At that
+  width every display equation and every data table must fit its card with
+  slack — ink at most 90% of the card's inner width — and every build
+  measures them in a real browser (`widths at the normal column: …`) and
+  fails on anything wider (`TOO WIDE nn% (page): … -- break the equation in
+  the source`). Wider always means the source is fixed, never scrolled or
+  scaled. Patterns that work: split chains at `=` (`aligned`/`align*`),
+  turn `A \qquad B` two-clause displays into `gathered`, continue products
+  with a leading `\times`/`\cdot` on the next row; re-lay a wide table
+  (fewer columns, shorter headings, or two tables). Browser math fonts
+  differ by ~5%, which is what the slack is for. Below the normal width
+  (phones, small tablets) an equation or table wider than the column
+  scrolls within its own box so the page never scrolls sideways; those
+  boxes never engage at the normal width, which is what the check
+  guarantees.
 - **Sized delimiters must balance within each alignment row.** Splitting a
   `\Bigl[ ... \Bigr]` pair across rows corrupts the generated MathML (the
   classic trap). Use `\left[...\right.` on the

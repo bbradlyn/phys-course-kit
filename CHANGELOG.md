@@ -23,7 +23,39 @@ log live in `conventions.md`.
 
 ---
 
-## 2026-10-24 — Windows support for the driver
+## 2026-10-24 — Windows support for the driver; a width policy for equations and tables
+
+### Added
+
+- **A desktop-first width policy for display equations and data tables,
+  checked on every build.** The site is calibrated for its *normal* width:
+  the full 46rem reading column of `shared/kit.css`, which every viewport
+  from about 800px up gives. There, every display equation and every data
+  table must fit its card with slack — ink at most 90% of the card's inner
+  width — and `build` and `check` now measure them in the headless browser
+  that ships with pa11y (`shared/eqwidth.js`, at a 1280×1024 viewport),
+  printing `widths at the normal column: N equations, widest nn% of the
+  card` and failing on anything wider with `TOO WIDE nn% (page): … --
+  break the equation in the source`. Wider always means the source is fixed
+  (break the equation, re-lay the table), never scrolled or scaled. Below
+  the normal width (phones, small tablets) an equation or table wider than
+  the column scrolls within its own box, so the page never scrolls
+  sideways: `shared/kit.css` gives BookML's equation containers and a
+  `<div class="table-scroll">` wrapper — added around every data table
+  after the build; a wrapper rather than `display:block` on the table,
+  which strips table semantics for screen readers — `overflow-x: auto`
+  and nothing decorative (a gradient scroll cue fails the audit: axe cannot
+  score text against a gradient, and these containers hold HTML text such
+  as case labels), rules that never engage at the normal width, which is
+  what the check guarantees. The old troubleshooting row
+  promised that a too-wide equation would surface as a pa11y
+  scrollable-region finding; with nothing set to scroll it never did, and
+  the row now describes the width check's output. Without Node.js or
+  pa11y the check prints `widths: NOT MEASURED` and the `PASS` line says
+  so (a failure only under `--strict`); `doctor` reports it, and
+  `--no-pa11y` skips it together with the audit. `build` also re-copies
+  the site stylesheet into each built lecture, so a CSS edit needs no
+  rebuild. Decided for PHYS 567 and mirrored here.
 
 ### Fixed
 

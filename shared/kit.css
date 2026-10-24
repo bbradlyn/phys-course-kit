@@ -82,6 +82,34 @@ img.ltx_graphics { max-width: 100%; height: auto; }
 .ltx_tabular .ltx_th, .ltx_tabular .ltx_td { padding: 0.3rem 0.7rem; }
 .ltx_tabular .ltx_th { font-family: "Helvetica Neue", Arial, sans-serif; }
 
+/* ---- display equations and data tables: never wider than the page --------
+   The site is calibrated for the NORMAL width -- the full 46rem reading
+   column above, which every viewport from about 800px up gives: there
+   course.py's width check guarantees every display equation and data table
+   fits its card with slack, and these rules do nothing visible.  Below it
+   (phones, small tablets) an equation or table wider than the column scrolls
+   within its own box, so the page never scrolls sideways and the text
+   column stays put.  The box grows by the scrollbar's height, nothing is
+   clipped.  No gradient scroll cues: these containers also hold HTML text
+   (case labels, \text{} runs), and axe cannot resolve a text colour against
+   a gradient background -- it fails the audit.  Data tables get the same
+   treatment through a wrapper div that course.py adds after the build: a
+   table styled display:block would scroll too, but loses its table
+   semantics for screen readers in Chrome and Safari. */
+.bml_equation_container, .table-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+}
+.bml_equation_container::-webkit-scrollbar, .table-scroll::-webkit-scrollbar { height: 8px; }
+.bml_equation_container::-webkit-scrollbar-thumb, .table-scroll::-webkit-scrollbar-thumb { background: #b6bcc6; border-radius: 4px; }
+.bml_equation_container::-webkit-scrollbar-track, .table-scroll::-webkit-scrollbar-track { background: transparent; }
+/* Firefox only: the standard scrollbar properties, which in Chrome would
+   disable the ::-webkit-scrollbar styling above if set unconditionally. */
+@supports (-moz-appearance: none) {
+  .bml_equation_container, .table-scroll { scrollbar-width: thin; scrollbar-color: #b6bcc6 transparent; }
+}
+
 /* ---- footer credit ------------------------------------------------------- */
 .ltx_page_logo { font-size: 0.75rem; color: var(--muted); margin: 1rem 0; }
 .ltx_page_logo a { color: var(--muted); }
