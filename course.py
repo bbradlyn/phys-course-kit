@@ -658,12 +658,19 @@ def check_lecture(nn, strict=False, no_pa11y=False):
             print(f"  latexml: {len(other)} error(s) -- {sorted(set(other))}")
             ok = False
         if dpth:
+            # BookML caches figure depths in bmlimages/ and re-runs dvisvgm only
+            # when a figure's DVI changes: depths cached while dvisvgm had no
+            # Ghostscript survive every rebuild, and a plain `clean`
             if libgs_available():
-                print(f"  latexml: {len(dpth)} image-depth error(s) WITH libgs present -- investigate")
+                print(f"  latexml: {len(dpth)} image-depth error(s) WITH libgs present -- if Ghostscript was\n"
+                      "           installed after this lecture's figures were first built, BookML is reusing\n"
+                      "           the depths it cached without it (a plain `clean` keeps that cache): run\n"
+                      "           `./course.py clean --deep`, then rebuild. Otherwise, investigate.")
                 ok = False
             else:
                 print(f"  latexml: {len(dpth)} image-depth error(s) (dvisvgm has no Ghostscript library; "
-                      "baseline-only, harmless for display figures -- install ghostscript to clear)")
+                      "baseline-only, harmless for display figures -- install ghostscript, then "
+                      "`./course.py clean --deep` and rebuild, to clear)")
     else:
         print("  latexml log missing")
         ok = False
@@ -815,7 +822,8 @@ def doctor():
     dv = probe("dvisvgm", ["dvisvgm", "-V1"])
     if dv is not None and "Ghostscript" not in dv:
         print("  warn: dvisvgm has NO Ghostscript library (libgs) -- BookML image-depth "
-              "errors expected (baseline-only); install ghostscript to clear")
+              "errors expected (baseline-only); install ghostscript to clear them, plus "
+              "`./course.py clean --deep` if lectures were already built without it")
     wired = base_env().get("LIBGS")
     if wired and not os.environ.get("LIBGS"):
         print(f"  note: LIBGS auto-wired to {wired} for dvisvgm")

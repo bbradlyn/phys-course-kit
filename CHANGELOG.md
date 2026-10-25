@@ -70,6 +70,18 @@ log live in `conventions.md`.
 
 ### Fixed
 
+- **The image-depth messages say when the figure cache has to go.** When
+  Ghostscript was installed after a course's first build, every lecture
+  with figures went on failing with image-depth errors `WITH libgs
+  present`, and installing Ghostscript, as the messages advised, did not
+  help: the figure baselines that first build could not read were saved
+  empty in BookML's render cache, `bmlimages/`, which redoes a figure only
+  when the figure itself changes and which a plain `clean` keeps. `check`
+  now names that cause and the fix — `./course.py clean --deep`, then
+  rebuild — and its no-Ghostscript note and `doctor`'s warning say to run
+  `clean --deep` after installing Ghostscript on a course already built.
+  `docs/troubleshooting.md` has the matching rows. The pass/fail verdicts
+  are unchanged.
 - **`course.py` runs on Windows.** As shipped, `doctor` reported `make` and
   `latexml` missing on a Windows machine that had everything installed, and
   no build could start: Strawberry Perl's folders (where LaTeXML and GNU
